@@ -1,8 +1,9 @@
 package routers
 
 import (
+	"clientupdator/server/controllers"
+
 	"github.com/gin-gonic/gin"
-	"yofc.update.server/controllers"
 )
 
 func InitRouter(r *gin.Engine) {

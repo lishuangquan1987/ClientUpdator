@@ -16,6 +16,28 @@ type CommonResponse struct {
 	Data      interface{}
 }
 
+func OK(data interface{}) CommonResponse {
+	return CommonResponse{
+		IsSuccess: true,
+		ErrorMsg:  "",
+		Data:      data,
+	}
+}
+func NG(msg string) CommonResponse {
+	return CommonResponse{
+		IsSuccess: false,
+		ErrorMsg:  msg,
+		Data:      nil,
+	}
+}
+func NGWithError(err error) CommonResponse {
+	return CommonResponse{
+		IsSuccess: false,
+		ErrorMsg:  err.Error(),
+		Data:      nil,
+	}
+}
+
 // 模型-系统信息
 type ServerOSInfo struct {
 	OS              string  //系统类型
