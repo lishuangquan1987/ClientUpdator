@@ -18,8 +18,8 @@ func (Project) Fields() []ent.Field {
 		field.String("version").Comment("项目版本"),
 		field.Bool("force_update").Comment("是否强制更新"),
 		field.String("watch_dir").Comment("监控文件夹"),
-		field.JSON("ignore_folders", []string{}).Comment("忽略的文件夹"),
-		field.JSON("ignore_files", []string{}).Comment("忽略的文件"),
+		field.JSON("ignore_folders", []string{}).Optional().Comment("忽略的文件夹"),
+		field.JSON("ignore_files", []string{}).Optional().Comment("忽略的文件"),
 	}
 }
 

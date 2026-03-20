@@ -279,6 +279,26 @@ func WatchDirContainsFold(v string) predicate.Project {
 	return predicate.Project(sql.FieldContainsFold(FieldWatchDir, v))
 }
 
+// IgnoreFoldersIsNil applies the IsNil predicate on the "ignore_folders" field.
+func IgnoreFoldersIsNil() predicate.Project {
+	return predicate.Project(sql.FieldIsNull(FieldIgnoreFolders))
+}
+
+// IgnoreFoldersNotNil applies the NotNil predicate on the "ignore_folders" field.
+func IgnoreFoldersNotNil() predicate.Project {
+	return predicate.Project(sql.FieldNotNull(FieldIgnoreFolders))
+}
+
+// IgnoreFilesIsNil applies the IsNil predicate on the "ignore_files" field.
+func IgnoreFilesIsNil() predicate.Project {
+	return predicate.Project(sql.FieldIsNull(FieldIgnoreFiles))
+}
+
+// IgnoreFilesNotNil applies the NotNil predicate on the "ignore_files" field.
+func IgnoreFilesNotNil() predicate.Project {
+	return predicate.Project(sql.FieldNotNull(FieldIgnoreFiles))
+}
+
 // HasChangeLogs applies the HasEdge predicate on the "change_logs" edge.
 func HasChangeLogs() predicate.Project {
 	return predicate.Project(func(s *sql.Selector) {

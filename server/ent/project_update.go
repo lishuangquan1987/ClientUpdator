@@ -97,6 +97,12 @@ func (_u *ProjectUpdate) AppendIgnoreFolders(v []string) *ProjectUpdate {
 	return _u
 }
 
+// ClearIgnoreFolders clears the value of the "ignore_folders" field.
+func (_u *ProjectUpdate) ClearIgnoreFolders() *ProjectUpdate {
+	_u.mutation.ClearIgnoreFolders()
+	return _u
+}
+
 // SetIgnoreFiles sets the "ignore_files" field.
 func (_u *ProjectUpdate) SetIgnoreFiles(v []string) *ProjectUpdate {
 	_u.mutation.SetIgnoreFiles(v)
@@ -106,6 +112,12 @@ func (_u *ProjectUpdate) SetIgnoreFiles(v []string) *ProjectUpdate {
 // AppendIgnoreFiles appends value to the "ignore_files" field.
 func (_u *ProjectUpdate) AppendIgnoreFiles(v []string) *ProjectUpdate {
 	_u.mutation.AppendIgnoreFiles(v)
+	return _u
+}
+
+// ClearIgnoreFiles clears the value of the "ignore_files" field.
+func (_u *ProjectUpdate) ClearIgnoreFiles() *ProjectUpdate {
+	_u.mutation.ClearIgnoreFiles()
 	return _u
 }
 
@@ -206,6 +218,9 @@ func (_u *ProjectUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			sqljson.Append(u, project.FieldIgnoreFolders, value)
 		})
 	}
+	if _u.mutation.IgnoreFoldersCleared() {
+		_spec.ClearField(project.FieldIgnoreFolders, field.TypeJSON)
+	}
 	if value, ok := _u.mutation.IgnoreFiles(); ok {
 		_spec.SetField(project.FieldIgnoreFiles, field.TypeJSON, value)
 	}
@@ -213,6 +228,9 @@ func (_u *ProjectUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, project.FieldIgnoreFiles, value)
 		})
+	}
+	if _u.mutation.IgnoreFilesCleared() {
+		_spec.ClearField(project.FieldIgnoreFiles, field.TypeJSON)
 	}
 	if _u.mutation.ChangeLogsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -347,6 +365,12 @@ func (_u *ProjectUpdateOne) AppendIgnoreFolders(v []string) *ProjectUpdateOne {
 	return _u
 }
 
+// ClearIgnoreFolders clears the value of the "ignore_folders" field.
+func (_u *ProjectUpdateOne) ClearIgnoreFolders() *ProjectUpdateOne {
+	_u.mutation.ClearIgnoreFolders()
+	return _u
+}
+
 // SetIgnoreFiles sets the "ignore_files" field.
 func (_u *ProjectUpdateOne) SetIgnoreFiles(v []string) *ProjectUpdateOne {
 	_u.mutation.SetIgnoreFiles(v)
@@ -356,6 +380,12 @@ func (_u *ProjectUpdateOne) SetIgnoreFiles(v []string) *ProjectUpdateOne {
 // AppendIgnoreFiles appends value to the "ignore_files" field.
 func (_u *ProjectUpdateOne) AppendIgnoreFiles(v []string) *ProjectUpdateOne {
 	_u.mutation.AppendIgnoreFiles(v)
+	return _u
+}
+
+// ClearIgnoreFiles clears the value of the "ignore_files" field.
+func (_u *ProjectUpdateOne) ClearIgnoreFiles() *ProjectUpdateOne {
+	_u.mutation.ClearIgnoreFiles()
 	return _u
 }
 
@@ -486,6 +516,9 @@ func (_u *ProjectUpdateOne) sqlSave(ctx context.Context) (_node *Project, err er
 			sqljson.Append(u, project.FieldIgnoreFolders, value)
 		})
 	}
+	if _u.mutation.IgnoreFoldersCleared() {
+		_spec.ClearField(project.FieldIgnoreFolders, field.TypeJSON)
+	}
 	if value, ok := _u.mutation.IgnoreFiles(); ok {
 		_spec.SetField(project.FieldIgnoreFiles, field.TypeJSON, value)
 	}
@@ -493,6 +526,9 @@ func (_u *ProjectUpdateOne) sqlSave(ctx context.Context) (_node *Project, err er
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, project.FieldIgnoreFiles, value)
 		})
+	}
+	if _u.mutation.IgnoreFilesCleared() {
+		_spec.ClearField(project.FieldIgnoreFiles, field.TypeJSON)
 	}
 	if _u.mutation.ChangeLogsCleared() {
 		edge := &sqlgraph.EdgeSpec{

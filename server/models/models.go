@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type FileInfo struct {
 	FileAbsolutePath string    //文件绝对路径，用于服务端
@@ -16,13 +18,22 @@ type CommonResponse struct {
 	Data      interface{}
 }
 
-func OK(data interface{}) CommonResponse {
+func OK() CommonResponse {
+	return CommonResponse{
+		IsSuccess: true,
+		ErrorMsg:  "",
+		Data:      nil,
+	}
+}
+
+func OKWithData(data any) CommonResponse {
 	return CommonResponse{
 		IsSuccess: true,
 		ErrorMsg:  "",
 		Data:      data,
 	}
 }
+
 func NG(msg string) CommonResponse {
 	return CommonResponse{
 		IsSuccess: false,

@@ -338,10 +338,24 @@ func (m *ProjectMutation) AppendedIgnoreFolders() ([]string, bool) {
 	return m.appendignore_folders, true
 }
 
+// ClearIgnoreFolders clears the value of the "ignore_folders" field.
+func (m *ProjectMutation) ClearIgnoreFolders() {
+	m.ignore_folders = nil
+	m.appendignore_folders = nil
+	m.clearedFields[project.FieldIgnoreFolders] = struct{}{}
+}
+
+// IgnoreFoldersCleared returns if the "ignore_folders" field was cleared in this mutation.
+func (m *ProjectMutation) IgnoreFoldersCleared() bool {
+	_, ok := m.clearedFields[project.FieldIgnoreFolders]
+	return ok
+}
+
 // ResetIgnoreFolders resets all changes to the "ignore_folders" field.
 func (m *ProjectMutation) ResetIgnoreFolders() {
 	m.ignore_folders = nil
 	m.appendignore_folders = nil
+	delete(m.clearedFields, project.FieldIgnoreFolders)
 }
 
 // SetIgnoreFiles sets the "ignore_files" field.
@@ -389,10 +403,24 @@ func (m *ProjectMutation) AppendedIgnoreFiles() ([]string, bool) {
 	return m.appendignore_files, true
 }
 
+// ClearIgnoreFiles clears the value of the "ignore_files" field.
+func (m *ProjectMutation) ClearIgnoreFiles() {
+	m.ignore_files = nil
+	m.appendignore_files = nil
+	m.clearedFields[project.FieldIgnoreFiles] = struct{}{}
+}
+
+// IgnoreFilesCleared returns if the "ignore_files" field was cleared in this mutation.
+func (m *ProjectMutation) IgnoreFilesCleared() bool {
+	_, ok := m.clearedFields[project.FieldIgnoreFiles]
+	return ok
+}
+
 // ResetIgnoreFiles resets all changes to the "ignore_files" field.
 func (m *ProjectMutation) ResetIgnoreFiles() {
 	m.ignore_files = nil
 	m.appendignore_files = nil
+	delete(m.clearedFields, project.FieldIgnoreFiles)
 }
 
 // AddChangeLogIDs adds the "change_logs" edge to the ProjectChangeLog entity by ids.
@@ -623,7 +651,14 @@ func (m *ProjectMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *ProjectMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(project.FieldIgnoreFolders) {
+		fields = append(fields, project.FieldIgnoreFolders)
+	}
+	if m.FieldCleared(project.FieldIgnoreFiles) {
+		fields = append(fields, project.FieldIgnoreFiles)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -636,6 +671,14 @@ func (m *ProjectMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *ProjectMutation) ClearField(name string) error {
+	switch name {
+	case project.FieldIgnoreFolders:
+		m.ClearIgnoreFolders()
+		return nil
+	case project.FieldIgnoreFiles:
+		m.ClearIgnoreFiles()
+		return nil
+	}
 	return fmt.Errorf("unknown Project nullable field %s", name)
 }
 

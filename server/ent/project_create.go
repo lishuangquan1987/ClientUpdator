@@ -117,12 +117,6 @@ func (_c *ProjectCreate) check() error {
 	if _, ok := _c.mutation.WatchDir(); !ok {
 		return &ValidationError{Name: "watch_dir", err: errors.New(`ent: missing required field "Project.watch_dir"`)}
 	}
-	if _, ok := _c.mutation.IgnoreFolders(); !ok {
-		return &ValidationError{Name: "ignore_folders", err: errors.New(`ent: missing required field "Project.ignore_folders"`)}
-	}
-	if _, ok := _c.mutation.IgnoreFiles(); !ok {
-		return &ValidationError{Name: "ignore_files", err: errors.New(`ent: missing required field "Project.ignore_files"`)}
-	}
 	return nil
 }
 
