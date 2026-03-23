@@ -4,6 +4,7 @@ package projectchangelog
 
 import (
 	"clientupdator/server/ent/predicate"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -62,6 +63,16 @@ func Version(v string) predicate.ProjectChangeLog {
 // Time applies equality check predicate on the "time" field. It's identical to TimeEQ.
 func Time(v string) predicate.ProjectChangeLog {
 	return predicate.ProjectChangeLog(sql.FieldEQ(FieldTime, v))
+}
+
+// CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
+func CreatedAt(v time.Time) predicate.ProjectChangeLog {
+	return predicate.ProjectChangeLog(sql.FieldEQ(FieldCreatedAt, v))
+}
+
+// IsDeleted applies equality check predicate on the "is_deleted" field. It's identical to IsDeletedEQ.
+func IsDeleted(v bool) predicate.ProjectChangeLog {
+	return predicate.ProjectChangeLog(sql.FieldEQ(FieldIsDeleted, v))
 }
 
 // VersionEQ applies the EQ predicate on the "version" field.
@@ -192,6 +203,56 @@ func TimeEqualFold(v string) predicate.ProjectChangeLog {
 // TimeContainsFold applies the ContainsFold predicate on the "time" field.
 func TimeContainsFold(v string) predicate.ProjectChangeLog {
 	return predicate.ProjectChangeLog(sql.FieldContainsFold(FieldTime, v))
+}
+
+// CreatedAtEQ applies the EQ predicate on the "created_at" field.
+func CreatedAtEQ(v time.Time) predicate.ProjectChangeLog {
+	return predicate.ProjectChangeLog(sql.FieldEQ(FieldCreatedAt, v))
+}
+
+// CreatedAtNEQ applies the NEQ predicate on the "created_at" field.
+func CreatedAtNEQ(v time.Time) predicate.ProjectChangeLog {
+	return predicate.ProjectChangeLog(sql.FieldNEQ(FieldCreatedAt, v))
+}
+
+// CreatedAtIn applies the In predicate on the "created_at" field.
+func CreatedAtIn(vs ...time.Time) predicate.ProjectChangeLog {
+	return predicate.ProjectChangeLog(sql.FieldIn(FieldCreatedAt, vs...))
+}
+
+// CreatedAtNotIn applies the NotIn predicate on the "created_at" field.
+func CreatedAtNotIn(vs ...time.Time) predicate.ProjectChangeLog {
+	return predicate.ProjectChangeLog(sql.FieldNotIn(FieldCreatedAt, vs...))
+}
+
+// CreatedAtGT applies the GT predicate on the "created_at" field.
+func CreatedAtGT(v time.Time) predicate.ProjectChangeLog {
+	return predicate.ProjectChangeLog(sql.FieldGT(FieldCreatedAt, v))
+}
+
+// CreatedAtGTE applies the GTE predicate on the "created_at" field.
+func CreatedAtGTE(v time.Time) predicate.ProjectChangeLog {
+	return predicate.ProjectChangeLog(sql.FieldGTE(FieldCreatedAt, v))
+}
+
+// CreatedAtLT applies the LT predicate on the "created_at" field.
+func CreatedAtLT(v time.Time) predicate.ProjectChangeLog {
+	return predicate.ProjectChangeLog(sql.FieldLT(FieldCreatedAt, v))
+}
+
+// CreatedAtLTE applies the LTE predicate on the "created_at" field.
+func CreatedAtLTE(v time.Time) predicate.ProjectChangeLog {
+	return predicate.ProjectChangeLog(sql.FieldLTE(FieldCreatedAt, v))
+}
+
+// IsDeletedEQ applies the EQ predicate on the "is_deleted" field.
+func IsDeletedEQ(v bool) predicate.ProjectChangeLog {
+	return predicate.ProjectChangeLog(sql.FieldEQ(FieldIsDeleted, v))
+}
+
+// IsDeletedNEQ applies the NEQ predicate on the "is_deleted" field.
+func IsDeletedNEQ(v bool) predicate.ProjectChangeLog {
+	return predicate.ProjectChangeLog(sql.FieldNEQ(FieldIsDeleted, v))
 }
 
 // HasProject applies the HasEdge predicate on the "project" edge.

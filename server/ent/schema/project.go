@@ -1,6 +1,8 @@
 package schema
 
 import (
+	"time"
+
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -20,6 +22,8 @@ func (Project) Fields() []ent.Field {
 		field.String("watch_dir").Comment("监控文件夹"),
 		field.JSON("ignore_folders", []string{}).Optional().Comment("忽略的文件夹"),
 		field.JSON("ignore_files", []string{}).Optional().Comment("忽略的文件"),
+		field.Time("created_at").Default(time.Now).Comment("创建日期"),
+		field.Bool("is_deleted").Default(false).Comment("是否被删除"),
 	}
 }
 

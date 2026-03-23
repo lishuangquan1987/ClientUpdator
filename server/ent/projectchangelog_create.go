@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -38,6 +39,34 @@ func (_c *ProjectChangeLogCreate) SetTime(v string) *ProjectChangeLogCreate {
 	return _c
 }
 
+// SetCreatedAt sets the "created_at" field.
+func (_c *ProjectChangeLogCreate) SetCreatedAt(v time.Time) *ProjectChangeLogCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (_c *ProjectChangeLogCreate) SetNillableCreatedAt(v *time.Time) *ProjectChangeLogCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
+	}
+	return _c
+}
+
+// SetIsDeleted sets the "is_deleted" field.
+func (_c *ProjectChangeLogCreate) SetIsDeleted(v bool) *ProjectChangeLogCreate {
+	_c.mutation.SetIsDeleted(v)
+	return _c
+}
+
+// SetNillableIsDeleted sets the "is_deleted" field if the given value is not nil.
+func (_c *ProjectChangeLogCreate) SetNillableIsDeleted(v *bool) *ProjectChangeLogCreate {
+	if v != nil {
+		_c.SetIsDeleted(*v)
+	}
+	return _c
+}
+
 // SetProjectID sets the "project" edge to the Project entity by ID.
 func (_c *ProjectChangeLogCreate) SetProjectID(id int) *ProjectChangeLogCreate {
 	_c.mutation.SetProjectID(id)
@@ -64,6 +93,7 @@ func (_c *ProjectChangeLogCreate) Mutation() *ProjectChangeLogMutation {
 
 // Save creates the ProjectChangeLog in the database.
 func (_c *ProjectChangeLogCreate) Save(ctx context.Context) (*ProjectChangeLog, error) {
+	_c.defaults()
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
@@ -89,6 +119,18 @@ func (_c *ProjectChangeLogCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (_c *ProjectChangeLogCreate) defaults() {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
+		v := projectchangelog.DefaultCreatedAt()
+		_c.mutation.SetCreatedAt(v)
+	}
+	if _, ok := _c.mutation.IsDeleted(); !ok {
+		v := projectchangelog.DefaultIsDeleted
+		_c.mutation.SetIsDeleted(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (_c *ProjectChangeLogCreate) check() error {
 	if _, ok := _c.mutation.Version(); !ok {
@@ -99,6 +141,12 @@ func (_c *ProjectChangeLogCreate) check() error {
 	}
 	if _, ok := _c.mutation.Time(); !ok {
 		return &ValidationError{Name: "time", err: errors.New(`ent: missing required field "ProjectChangeLog.time"`)}
+	}
+	if _, ok := _c.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ProjectChangeLog.created_at"`)}
+	}
+	if _, ok := _c.mutation.IsDeleted(); !ok {
+		return &ValidationError{Name: "is_deleted", err: errors.New(`ent: missing required field "ProjectChangeLog.is_deleted"`)}
 	}
 	return nil
 }
@@ -138,6 +186,14 @@ func (_c *ProjectChangeLogCreate) createSpec() (*ProjectChangeLog, *sqlgraph.Cre
 		_spec.SetField(projectchangelog.FieldTime, field.TypeString, value)
 		_node.Time = value
 	}
+	if value, ok := _c.mutation.CreatedAt(); ok {
+		_spec.SetField(projectchangelog.FieldCreatedAt, field.TypeTime, value)
+		_node.CreatedAt = value
+	}
+	if value, ok := _c.mutation.IsDeleted(); ok {
+		_spec.SetField(projectchangelog.FieldIsDeleted, field.TypeBool, value)
+		_node.IsDeleted = value
+	}
 	if nodes := _c.mutation.ProjectIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -176,6 +232,7 @@ func (_c *ProjectChangeLogCreateBulk) Save(ctx context.Context) ([]*ProjectChang
 	for i := range _c.builders {
 		func(i int, root context.Context) {
 			builder := _c.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ProjectChangeLogMutation)
 				if !ok {

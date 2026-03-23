@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -42,6 +43,8 @@ type ProjectMutation struct {
 	appendignore_folders []string
 	ignore_files         *[]string
 	appendignore_files   []string
+	created_at           *time.Time
+	is_deleted           *bool
 	clearedFields        map[string]struct{}
 	change_logs          map[int]struct{}
 	removedchange_logs   map[int]struct{}
@@ -423,6 +426,78 @@ func (m *ProjectMutation) ResetIgnoreFiles() {
 	delete(m.clearedFields, project.FieldIgnoreFiles)
 }
 
+// SetCreatedAt sets the "created_at" field.
+func (m *ProjectMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ProjectMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Project entity.
+// If the Project object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProjectMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ProjectMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetIsDeleted sets the "is_deleted" field.
+func (m *ProjectMutation) SetIsDeleted(b bool) {
+	m.is_deleted = &b
+}
+
+// IsDeleted returns the value of the "is_deleted" field in the mutation.
+func (m *ProjectMutation) IsDeleted() (r bool, exists bool) {
+	v := m.is_deleted
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsDeleted returns the old "is_deleted" field's value of the Project entity.
+// If the Project object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProjectMutation) OldIsDeleted(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsDeleted is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsDeleted requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsDeleted: %w", err)
+	}
+	return oldValue.IsDeleted, nil
+}
+
+// ResetIsDeleted resets all changes to the "is_deleted" field.
+func (m *ProjectMutation) ResetIsDeleted() {
+	m.is_deleted = nil
+}
+
 // AddChangeLogIDs adds the "change_logs" edge to the ProjectChangeLog entity by ids.
 func (m *ProjectMutation) AddChangeLogIDs(ids ...int) {
 	if m.change_logs == nil {
@@ -511,7 +586,7 @@ func (m *ProjectMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ProjectMutation) Fields() []string {
-	fields := make([]string, 0, 6)
+	fields := make([]string, 0, 8)
 	if m.name != nil {
 		fields = append(fields, project.FieldName)
 	}
@@ -529,6 +604,12 @@ func (m *ProjectMutation) Fields() []string {
 	}
 	if m.ignore_files != nil {
 		fields = append(fields, project.FieldIgnoreFiles)
+	}
+	if m.created_at != nil {
+		fields = append(fields, project.FieldCreatedAt)
+	}
+	if m.is_deleted != nil {
+		fields = append(fields, project.FieldIsDeleted)
 	}
 	return fields
 }
@@ -550,6 +631,10 @@ func (m *ProjectMutation) Field(name string) (ent.Value, bool) {
 		return m.IgnoreFolders()
 	case project.FieldIgnoreFiles:
 		return m.IgnoreFiles()
+	case project.FieldCreatedAt:
+		return m.CreatedAt()
+	case project.FieldIsDeleted:
+		return m.IsDeleted()
 	}
 	return nil, false
 }
@@ -571,6 +656,10 @@ func (m *ProjectMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldIgnoreFolders(ctx)
 	case project.FieldIgnoreFiles:
 		return m.OldIgnoreFiles(ctx)
+	case project.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case project.FieldIsDeleted:
+		return m.OldIsDeleted(ctx)
 	}
 	return nil, fmt.Errorf("unknown Project field %s", name)
 }
@@ -621,6 +710,20 @@ func (m *ProjectMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetIgnoreFiles(v)
+		return nil
+	case project.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case project.FieldIsDeleted:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsDeleted(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Project field %s", name)
@@ -703,6 +806,12 @@ func (m *ProjectMutation) ResetField(name string) error {
 		return nil
 	case project.FieldIgnoreFiles:
 		m.ResetIgnoreFiles()
+		return nil
+	case project.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case project.FieldIsDeleted:
+		m.ResetIsDeleted()
 		return nil
 	}
 	return fmt.Errorf("unknown Project field %s", name)
@@ -802,6 +911,8 @@ type ProjectChangeLogMutation struct {
 	logs           *[]string
 	appendlogs     []string
 	time           *string
+	created_at     *time.Time
+	is_deleted     *bool
 	clearedFields  map[string]struct{}
 	project        *int
 	clearedproject bool
@@ -1031,6 +1142,78 @@ func (m *ProjectChangeLogMutation) ResetTime() {
 	m.time = nil
 }
 
+// SetCreatedAt sets the "created_at" field.
+func (m *ProjectChangeLogMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ProjectChangeLogMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ProjectChangeLog entity.
+// If the ProjectChangeLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProjectChangeLogMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ProjectChangeLogMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetIsDeleted sets the "is_deleted" field.
+func (m *ProjectChangeLogMutation) SetIsDeleted(b bool) {
+	m.is_deleted = &b
+}
+
+// IsDeleted returns the value of the "is_deleted" field in the mutation.
+func (m *ProjectChangeLogMutation) IsDeleted() (r bool, exists bool) {
+	v := m.is_deleted
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsDeleted returns the old "is_deleted" field's value of the ProjectChangeLog entity.
+// If the ProjectChangeLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProjectChangeLogMutation) OldIsDeleted(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsDeleted is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsDeleted requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsDeleted: %w", err)
+	}
+	return oldValue.IsDeleted, nil
+}
+
+// ResetIsDeleted resets all changes to the "is_deleted" field.
+func (m *ProjectChangeLogMutation) ResetIsDeleted() {
+	m.is_deleted = nil
+}
+
 // SetProjectID sets the "project" edge to the Project entity by id.
 func (m *ProjectChangeLogMutation) SetProjectID(id int) {
 	m.project = &id
@@ -1104,7 +1287,7 @@ func (m *ProjectChangeLogMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ProjectChangeLogMutation) Fields() []string {
-	fields := make([]string, 0, 3)
+	fields := make([]string, 0, 5)
 	if m.version != nil {
 		fields = append(fields, projectchangelog.FieldVersion)
 	}
@@ -1113,6 +1296,12 @@ func (m *ProjectChangeLogMutation) Fields() []string {
 	}
 	if m.time != nil {
 		fields = append(fields, projectchangelog.FieldTime)
+	}
+	if m.created_at != nil {
+		fields = append(fields, projectchangelog.FieldCreatedAt)
+	}
+	if m.is_deleted != nil {
+		fields = append(fields, projectchangelog.FieldIsDeleted)
 	}
 	return fields
 }
@@ -1128,6 +1317,10 @@ func (m *ProjectChangeLogMutation) Field(name string) (ent.Value, bool) {
 		return m.Logs()
 	case projectchangelog.FieldTime:
 		return m.Time()
+	case projectchangelog.FieldCreatedAt:
+		return m.CreatedAt()
+	case projectchangelog.FieldIsDeleted:
+		return m.IsDeleted()
 	}
 	return nil, false
 }
@@ -1143,6 +1336,10 @@ func (m *ProjectChangeLogMutation) OldField(ctx context.Context, name string) (e
 		return m.OldLogs(ctx)
 	case projectchangelog.FieldTime:
 		return m.OldTime(ctx)
+	case projectchangelog.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case projectchangelog.FieldIsDeleted:
+		return m.OldIsDeleted(ctx)
 	}
 	return nil, fmt.Errorf("unknown ProjectChangeLog field %s", name)
 }
@@ -1172,6 +1369,20 @@ func (m *ProjectChangeLogMutation) SetField(name string, value ent.Value) error 
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetTime(v)
+		return nil
+	case projectchangelog.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case projectchangelog.FieldIsDeleted:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsDeleted(v)
 		return nil
 	}
 	return fmt.Errorf("unknown ProjectChangeLog field %s", name)
@@ -1230,6 +1441,12 @@ func (m *ProjectChangeLogMutation) ResetField(name string) error {
 		return nil
 	case projectchangelog.FieldTime:
 		m.ResetTime()
+		return nil
+	case projectchangelog.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case projectchangelog.FieldIsDeleted:
+		m.ResetIsDeleted()
 		return nil
 	}
 	return fmt.Errorf("unknown ProjectChangeLog field %s", name)

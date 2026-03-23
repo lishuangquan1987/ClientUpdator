@@ -3,6 +3,8 @@
 package projectchangelog
 
 import (
+	"time"
+
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 )
@@ -18,6 +20,10 @@ const (
 	FieldLogs = "logs"
 	// FieldTime holds the string denoting the time field in the database.
 	FieldTime = "time"
+	// FieldCreatedAt holds the string denoting the created_at field in the database.
+	FieldCreatedAt = "created_at"
+	// FieldIsDeleted holds the string denoting the is_deleted field in the database.
+	FieldIsDeleted = "is_deleted"
 	// EdgeProject holds the string denoting the project edge name in mutations.
 	EdgeProject = "project"
 	// Table holds the table name of the projectchangelog in the database.
@@ -37,6 +43,8 @@ var Columns = []string{
 	FieldVersion,
 	FieldLogs,
 	FieldTime,
+	FieldCreatedAt,
+	FieldIsDeleted,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "project_change_logs"
@@ -60,6 +68,13 @@ func ValidColumn(column string) bool {
 	return false
 }
 
+var (
+	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
+	DefaultCreatedAt func() time.Time
+	// DefaultIsDeleted holds the default value on creation for the "is_deleted" field.
+	DefaultIsDeleted bool
+)
+
 // OrderOption defines the ordering options for the ProjectChangeLog queries.
 type OrderOption func(*sql.Selector)
 
@@ -76,6 +91,16 @@ func ByVersion(opts ...sql.OrderTermOption) OrderOption {
 // ByTime orders the results by the time field.
 func ByTime(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTime, opts...).ToFunc()
+}
+
+// ByCreatedAt orders the results by the created_at field.
+func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
+}
+
+// ByIsDeleted orders the results by the is_deleted field.
+func ByIsDeleted(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsDeleted, opts...).ToFunc()
 }
 
 // ByProjectField orders the results by project field.

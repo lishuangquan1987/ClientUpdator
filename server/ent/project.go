@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -29,6 +30,10 @@ type Project struct {
 	IgnoreFolders []string `json:"ignore_folders,omitempty"`
 	// 忽略的文件
 	IgnoreFiles []string `json:"ignore_files,omitempty"`
+	// 创建日期
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// 是否被删除
+	IsDeleted bool `json:"is_deleted,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ProjectQuery when eager-loading is set.
 	Edges        ProjectEdges `json:"edges"`
@@ -60,12 +65,14 @@ func (*Project) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case project.FieldIgnoreFolders, project.FieldIgnoreFiles:
 			values[i] = new([]byte)
-		case project.FieldForceUpdate:
+		case project.FieldForceUpdate, project.FieldIsDeleted:
 			values[i] = new(sql.NullBool)
 		case project.FieldID:
 			values[i] = new(sql.NullInt64)
 		case project.FieldName, project.FieldVersion, project.FieldWatchDir:
 			values[i] = new(sql.NullString)
+		case project.FieldCreatedAt:
+			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -127,6 +134,18 @@ func (_m *Project) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field ignore_files: %w", err)
 				}
 			}
+		case project.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				_m.CreatedAt = value.Time
+			}
+		case project.FieldIsDeleted:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_deleted", values[i])
+			} else if value.Valid {
+				_m.IsDeleted = value.Bool
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -185,6 +204,12 @@ func (_m *Project) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("ignore_files=")
 	builder.WriteString(fmt.Sprintf("%v", _m.IgnoreFiles))
+	builder.WriteString(", ")
+	builder.WriteString("created_at=")
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("is_deleted=")
+	builder.WriteString(fmt.Sprintf("%v", _m.IsDeleted))
 	builder.WriteByte(')')
 	return builder.String()
 }

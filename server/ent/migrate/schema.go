@@ -17,6 +17,8 @@ var (
 		{Name: "watch_dir", Type: field.TypeString},
 		{Name: "ignore_folders", Type: field.TypeJSON, Nullable: true},
 		{Name: "ignore_files", Type: field.TypeJSON, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "is_deleted", Type: field.TypeBool, Default: false},
 	}
 	// ProjectsTable holds the schema information for the "projects" table.
 	ProjectsTable = &schema.Table{
@@ -30,6 +32,8 @@ var (
 		{Name: "version", Type: field.TypeString},
 		{Name: "logs", Type: field.TypeJSON},
 		{Name: "time", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "is_deleted", Type: field.TypeBool, Default: false},
 		{Name: "project_change_logs", Type: field.TypeInt, Nullable: true},
 	}
 	// ProjectChangeLogsTable holds the schema information for the "project_change_logs" table.
@@ -40,7 +44,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "project_change_logs_projects_change_logs",
-				Columns:    []*schema.Column{ProjectChangeLogsColumns[4]},
+				Columns:    []*schema.Column{ProjectChangeLogsColumns[6]},
 				RefColumns: []*schema.Column{ProjectsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},

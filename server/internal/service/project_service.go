@@ -29,7 +29,7 @@ func CreateProjectWithFirstLog(name string, watchDir string, isForceUpdate bool,
 			return err
 		}
 		//插入项目变更日志
-		timeStr, _ := datetime.Now().ToString("yyyy-MM-dd HH:mm:ss")
+		timeStr := datetime.Now().ToStringWithFormat("yyyy-MM-dd HH:mm:ss")
 		_, err = tx.ProjectChangeLog.Create().
 			SetProject(project).
 			SetVersion("V1.0.0").
@@ -74,7 +74,7 @@ func UpdateProject(id int, name string, watchDir string, isForceUpdate bool, ign
 
 func GetAllProjects() models.CommonResponse {
 	ctx := context.Background()
-	projects, err := db.Client.Project.Query().All(ctx)
+	projects, err := db.Client.Project.Query().Where(project.IsDeletedEQ(false)).All(ctx)
 	if err != nil {
 		return models.NGWithError(err)
 	} else {
@@ -86,7 +86,8 @@ func GetProjectChangeLogs(projectId int) models.CommonResponse {
 	ctx := context.Background()
 	projectLogs, err := db.Client.ProjectChangeLog.
 		Query().
-		Where(projectchangelog.HasProjectWith(project.IDEQ(projectId))).
+		Where(projectchangelog.HasProjectWith(project.IDEQ(projectId)),
+			projectchangelog.IsDeletedEQ(false)).
 		All(ctx)
 	if err != nil {
 		return models.NGWithError(err)
@@ -97,10 +98,21 @@ func GetProjectChangeLogs(projectId int) models.CommonResponse {
 
 func GetProjectById(projectId int) models.CommonResponse {
 	ctx := context.Background()
-	project, err := db.Client.Project.Query().Where(project.IDEQ(projectId)).First(ctx)
+	p, err := db.Client.Project.Query().Where(project.IDEQ(projectId)).First(ctx)
 	if err != nil {
 		return models.NGWithError(err)
-	} else {
-		return models.OKWithData(project)
 	}
+
+	return models.OKWithData(p)
+}
+
+func DeleteProject(projectId int) models.CommonResponse {
+	ctx := context.Background()
+	_, err := db.Client.Project.Update().Where(project.IDEQ(projectId)).
+		SetIsDeleted(true).
+		Save(ctx)
+	if err != nil {
+		return models.NGWithError(err)
+	}
+	return models.OK()
 }

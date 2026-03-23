@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -24,6 +25,10 @@ type ProjectChangeLog struct {
 	Logs []string `json:"logs,omitempty"`
 	// 变更时间
 	Time string `json:"time,omitempty"`
+	// 创建日期
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// 是否被删除
+	IsDeleted bool `json:"is_deleted,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ProjectChangeLogQuery when eager-loading is set.
 	Edges               ProjectChangeLogEdges `json:"edges"`
@@ -58,10 +63,14 @@ func (*ProjectChangeLog) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case projectchangelog.FieldLogs:
 			values[i] = new([]byte)
+		case projectchangelog.FieldIsDeleted:
+			values[i] = new(sql.NullBool)
 		case projectchangelog.FieldID:
 			values[i] = new(sql.NullInt64)
 		case projectchangelog.FieldVersion, projectchangelog.FieldTime:
 			values[i] = new(sql.NullString)
+		case projectchangelog.FieldCreatedAt:
+			values[i] = new(sql.NullTime)
 		case projectchangelog.ForeignKeys[0]: // project_change_logs
 			values[i] = new(sql.NullInt64)
 		default:
@@ -104,6 +113,18 @@ func (_m *ProjectChangeLog) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field time", values[i])
 			} else if value.Valid {
 				_m.Time = value.String
+			}
+		case projectchangelog.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				_m.CreatedAt = value.Time
+			}
+		case projectchangelog.FieldIsDeleted:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_deleted", values[i])
+			} else if value.Valid {
+				_m.IsDeleted = value.Bool
 			}
 		case projectchangelog.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -161,6 +182,12 @@ func (_m *ProjectChangeLog) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("time=")
 	builder.WriteString(_m.Time)
+	builder.WriteString(", ")
+	builder.WriteString("created_at=")
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("is_deleted=")
+	builder.WriteString(fmt.Sprintf("%v", _m.IsDeleted))
 	builder.WriteByte(')')
 	return builder.String()
 }

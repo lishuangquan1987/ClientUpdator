@@ -9,7 +9,6 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	"github.com/utils-go/ngo/converter"
 	"github.com/utils-go/ngo/io/directory"
 )
 
@@ -121,26 +120,35 @@ func UpdateProject(ctx *gin.Context) {
 	ctx.JSON(200, result)
 }
 
+func DeleteProject(ctx *gin.Context) {
+	var projectIdDto struct {
+		ProjectId int `json:"projectId"`
+	}
+	if err := ctx.BindUri(&projectIdDto); err != nil {
+		ctx.JSON(200, models.NGWithError(err))
+		return
+	}
+
+	ctx.JSON(200, service.DeleteProject(projectIdDto.ProjectId))
+}
+
 func GetAllProjects(ctx *gin.Context) {
 	ctx.JSON(200, service.GetAllProjects())
 }
 
 func GetProjectChangeLogs(ctx *gin.Context) {
-	projectIdStr := ctx.DefaultQuery("projectId", "")
-	if projectIdStr == "" {
-		ctx.JSON(200, models.NG("项目ID不能为空"))
-		return
+	var projectIdDto struct {
+		ProjectId int `json:"projectId"`
 	}
-
-	if projectId, err := converter.ConvertToIntFromString(projectIdStr); err != nil {
+	if err := ctx.BindUri(&projectIdDto); err != nil {
 		ctx.JSON(200, models.NGWithError(err))
 		return
 	}
 
-	if projectId <= 0 {
+	if projectIdDto.ProjectId <= 0 {
 		ctx.JSON(200, models.NG("项目ID不能为空"))
 		return
 	}
 
-	ctx.JSON(200, service.GetProjectChangeLogs(projectId))
+	ctx.JSON(200, service.GetProjectChangeLogs(projectIdDto.ProjectId))
 }

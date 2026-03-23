@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -118,6 +119,34 @@ func (_u *ProjectUpdate) AppendIgnoreFiles(v []string) *ProjectUpdate {
 // ClearIgnoreFiles clears the value of the "ignore_files" field.
 func (_u *ProjectUpdate) ClearIgnoreFiles() *ProjectUpdate {
 	_u.mutation.ClearIgnoreFiles()
+	return _u
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (_u *ProjectUpdate) SetCreatedAt(v time.Time) *ProjectUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (_u *ProjectUpdate) SetNillableCreatedAt(v *time.Time) *ProjectUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
+	}
+	return _u
+}
+
+// SetIsDeleted sets the "is_deleted" field.
+func (_u *ProjectUpdate) SetIsDeleted(v bool) *ProjectUpdate {
+	_u.mutation.SetIsDeleted(v)
+	return _u
+}
+
+// SetNillableIsDeleted sets the "is_deleted" field if the given value is not nil.
+func (_u *ProjectUpdate) SetNillableIsDeleted(v *bool) *ProjectUpdate {
+	if v != nil {
+		_u.SetIsDeleted(*v)
+	}
 	return _u
 }
 
@@ -231,6 +260,12 @@ func (_u *ProjectUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.IgnoreFilesCleared() {
 		_spec.ClearField(project.FieldIgnoreFiles, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.CreatedAt(); ok {
+		_spec.SetField(project.FieldCreatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.IsDeleted(); ok {
+		_spec.SetField(project.FieldIsDeleted, field.TypeBool, value)
 	}
 	if _u.mutation.ChangeLogsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -389,6 +424,34 @@ func (_u *ProjectUpdateOne) ClearIgnoreFiles() *ProjectUpdateOne {
 	return _u
 }
 
+// SetCreatedAt sets the "created_at" field.
+func (_u *ProjectUpdateOne) SetCreatedAt(v time.Time) *ProjectUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (_u *ProjectUpdateOne) SetNillableCreatedAt(v *time.Time) *ProjectUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
+	}
+	return _u
+}
+
+// SetIsDeleted sets the "is_deleted" field.
+func (_u *ProjectUpdateOne) SetIsDeleted(v bool) *ProjectUpdateOne {
+	_u.mutation.SetIsDeleted(v)
+	return _u
+}
+
+// SetNillableIsDeleted sets the "is_deleted" field if the given value is not nil.
+func (_u *ProjectUpdateOne) SetNillableIsDeleted(v *bool) *ProjectUpdateOne {
+	if v != nil {
+		_u.SetIsDeleted(*v)
+	}
+	return _u
+}
+
 // AddChangeLogIDs adds the "change_logs" edge to the ProjectChangeLog entity by IDs.
 func (_u *ProjectUpdateOne) AddChangeLogIDs(ids ...int) *ProjectUpdateOne {
 	_u.mutation.AddChangeLogIDs(ids...)
@@ -529,6 +592,12 @@ func (_u *ProjectUpdateOne) sqlSave(ctx context.Context) (_node *Project, err er
 	}
 	if _u.mutation.IgnoreFilesCleared() {
 		_spec.ClearField(project.FieldIgnoreFiles, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.CreatedAt(); ok {
+		_spec.SetField(project.FieldCreatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.IsDeleted(); ok {
+		_spec.SetField(project.FieldIsDeleted, field.TypeBool, value)
 	}
 	if _u.mutation.ChangeLogsCleared() {
 		edge := &sqlgraph.EdgeSpec{

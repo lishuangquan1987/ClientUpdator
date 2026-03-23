@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -56,6 +57,34 @@ func (_c *ProjectCreate) SetIgnoreFiles(v []string) *ProjectCreate {
 	return _c
 }
 
+// SetCreatedAt sets the "created_at" field.
+func (_c *ProjectCreate) SetCreatedAt(v time.Time) *ProjectCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (_c *ProjectCreate) SetNillableCreatedAt(v *time.Time) *ProjectCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
+	}
+	return _c
+}
+
+// SetIsDeleted sets the "is_deleted" field.
+func (_c *ProjectCreate) SetIsDeleted(v bool) *ProjectCreate {
+	_c.mutation.SetIsDeleted(v)
+	return _c
+}
+
+// SetNillableIsDeleted sets the "is_deleted" field if the given value is not nil.
+func (_c *ProjectCreate) SetNillableIsDeleted(v *bool) *ProjectCreate {
+	if v != nil {
+		_c.SetIsDeleted(*v)
+	}
+	return _c
+}
+
 // AddChangeLogIDs adds the "change_logs" edge to the ProjectChangeLog entity by IDs.
 func (_c *ProjectCreate) AddChangeLogIDs(ids ...int) *ProjectCreate {
 	_c.mutation.AddChangeLogIDs(ids...)
@@ -78,6 +107,7 @@ func (_c *ProjectCreate) Mutation() *ProjectMutation {
 
 // Save creates the Project in the database.
 func (_c *ProjectCreate) Save(ctx context.Context) (*Project, error) {
+	_c.defaults()
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
@@ -103,6 +133,18 @@ func (_c *ProjectCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (_c *ProjectCreate) defaults() {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
+		v := project.DefaultCreatedAt()
+		_c.mutation.SetCreatedAt(v)
+	}
+	if _, ok := _c.mutation.IsDeleted(); !ok {
+		v := project.DefaultIsDeleted
+		_c.mutation.SetIsDeleted(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (_c *ProjectCreate) check() error {
 	if _, ok := _c.mutation.Name(); !ok {
@@ -116,6 +158,12 @@ func (_c *ProjectCreate) check() error {
 	}
 	if _, ok := _c.mutation.WatchDir(); !ok {
 		return &ValidationError{Name: "watch_dir", err: errors.New(`ent: missing required field "Project.watch_dir"`)}
+	}
+	if _, ok := _c.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Project.created_at"`)}
+	}
+	if _, ok := _c.mutation.IsDeleted(); !ok {
+		return &ValidationError{Name: "is_deleted", err: errors.New(`ent: missing required field "Project.is_deleted"`)}
 	}
 	return nil
 }
@@ -167,6 +215,14 @@ func (_c *ProjectCreate) createSpec() (*Project, *sqlgraph.CreateSpec) {
 		_spec.SetField(project.FieldIgnoreFiles, field.TypeJSON, value)
 		_node.IgnoreFiles = value
 	}
+	if value, ok := _c.mutation.CreatedAt(); ok {
+		_spec.SetField(project.FieldCreatedAt, field.TypeTime, value)
+		_node.CreatedAt = value
+	}
+	if value, ok := _c.mutation.IsDeleted(); ok {
+		_spec.SetField(project.FieldIsDeleted, field.TypeBool, value)
+		_node.IsDeleted = value
+	}
 	if nodes := _c.mutation.ChangeLogsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -204,6 +260,7 @@ func (_c *ProjectCreateBulk) Save(ctx context.Context) ([]*Project, error) {
 	for i := range _c.builders {
 		func(i int, root context.Context) {
 			builder := _c.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ProjectMutation)
 				if !ok {

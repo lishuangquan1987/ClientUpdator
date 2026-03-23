@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -65,6 +66,34 @@ func (_u *ProjectChangeLogUpdate) SetTime(v string) *ProjectChangeLogUpdate {
 func (_u *ProjectChangeLogUpdate) SetNillableTime(v *string) *ProjectChangeLogUpdate {
 	if v != nil {
 		_u.SetTime(*v)
+	}
+	return _u
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (_u *ProjectChangeLogUpdate) SetCreatedAt(v time.Time) *ProjectChangeLogUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (_u *ProjectChangeLogUpdate) SetNillableCreatedAt(v *time.Time) *ProjectChangeLogUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
+	}
+	return _u
+}
+
+// SetIsDeleted sets the "is_deleted" field.
+func (_u *ProjectChangeLogUpdate) SetIsDeleted(v bool) *ProjectChangeLogUpdate {
+	_u.mutation.SetIsDeleted(v)
+	return _u
+}
+
+// SetNillableIsDeleted sets the "is_deleted" field if the given value is not nil.
+func (_u *ProjectChangeLogUpdate) SetNillableIsDeleted(v *bool) *ProjectChangeLogUpdate {
+	if v != nil {
+		_u.SetIsDeleted(*v)
 	}
 	return _u
 }
@@ -148,6 +177,12 @@ func (_u *ProjectChangeLogUpdate) sqlSave(ctx context.Context) (_node int, err e
 	}
 	if value, ok := _u.mutation.Time(); ok {
 		_spec.SetField(projectchangelog.FieldTime, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.CreatedAt(); ok {
+		_spec.SetField(projectchangelog.FieldCreatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.IsDeleted(); ok {
+		_spec.SetField(projectchangelog.FieldIsDeleted, field.TypeBool, value)
 	}
 	if _u.mutation.ProjectCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -234,6 +269,34 @@ func (_u *ProjectChangeLogUpdateOne) SetTime(v string) *ProjectChangeLogUpdateOn
 func (_u *ProjectChangeLogUpdateOne) SetNillableTime(v *string) *ProjectChangeLogUpdateOne {
 	if v != nil {
 		_u.SetTime(*v)
+	}
+	return _u
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (_u *ProjectChangeLogUpdateOne) SetCreatedAt(v time.Time) *ProjectChangeLogUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (_u *ProjectChangeLogUpdateOne) SetNillableCreatedAt(v *time.Time) *ProjectChangeLogUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
+	}
+	return _u
+}
+
+// SetIsDeleted sets the "is_deleted" field.
+func (_u *ProjectChangeLogUpdateOne) SetIsDeleted(v bool) *ProjectChangeLogUpdateOne {
+	_u.mutation.SetIsDeleted(v)
+	return _u
+}
+
+// SetNillableIsDeleted sets the "is_deleted" field if the given value is not nil.
+func (_u *ProjectChangeLogUpdateOne) SetNillableIsDeleted(v *bool) *ProjectChangeLogUpdateOne {
+	if v != nil {
+		_u.SetIsDeleted(*v)
 	}
 	return _u
 }
@@ -347,6 +410,12 @@ func (_u *ProjectChangeLogUpdateOne) sqlSave(ctx context.Context) (_node *Projec
 	}
 	if value, ok := _u.mutation.Time(); ok {
 		_spec.SetField(projectchangelog.FieldTime, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.CreatedAt(); ok {
+		_spec.SetField(projectchangelog.FieldCreatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.IsDeleted(); ok {
+		_spec.SetField(projectchangelog.FieldIsDeleted, field.TypeBool, value)
 	}
 	if _u.mutation.ProjectCleared() {
 		edge := &sqlgraph.EdgeSpec{

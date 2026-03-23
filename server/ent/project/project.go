@@ -3,6 +3,8 @@
 package project
 
 import (
+	"time"
+
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 )
@@ -24,6 +26,10 @@ const (
 	FieldIgnoreFolders = "ignore_folders"
 	// FieldIgnoreFiles holds the string denoting the ignore_files field in the database.
 	FieldIgnoreFiles = "ignore_files"
+	// FieldCreatedAt holds the string denoting the created_at field in the database.
+	FieldCreatedAt = "created_at"
+	// FieldIsDeleted holds the string denoting the is_deleted field in the database.
+	FieldIsDeleted = "is_deleted"
 	// EdgeChangeLogs holds the string denoting the change_logs edge name in mutations.
 	EdgeChangeLogs = "change_logs"
 	// Table holds the table name of the project in the database.
@@ -46,6 +52,8 @@ var Columns = []string{
 	FieldWatchDir,
 	FieldIgnoreFolders,
 	FieldIgnoreFiles,
+	FieldCreatedAt,
+	FieldIsDeleted,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -57,6 +65,13 @@ func ValidColumn(column string) bool {
 	}
 	return false
 }
+
+var (
+	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
+	DefaultCreatedAt func() time.Time
+	// DefaultIsDeleted holds the default value on creation for the "is_deleted" field.
+	DefaultIsDeleted bool
+)
 
 // OrderOption defines the ordering options for the Project queries.
 type OrderOption func(*sql.Selector)
@@ -84,6 +99,16 @@ func ByForceUpdate(opts ...sql.OrderTermOption) OrderOption {
 // ByWatchDir orders the results by the watch_dir field.
 func ByWatchDir(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldWatchDir, opts...).ToFunc()
+}
+
+// ByCreatedAt orders the results by the created_at field.
+func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
+}
+
+// ByIsDeleted orders the results by the is_deleted field.
+func ByIsDeleted(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsDeleted, opts...).ToFunc()
 }
 
 // ByChangeLogsCount orders the results by change_logs count.

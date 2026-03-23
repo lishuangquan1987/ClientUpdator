@@ -2,8 +2,35 @@
 
 package ent
 
+import (
+	"clientupdator/server/ent/project"
+	"clientupdator/server/ent/projectchangelog"
+	"clientupdator/server/ent/schema"
+	"time"
+)
+
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	projectFields := schema.Project{}.Fields()
+	_ = projectFields
+	// projectDescCreatedAt is the schema descriptor for created_at field.
+	projectDescCreatedAt := projectFields[6].Descriptor()
+	// project.DefaultCreatedAt holds the default value on creation for the created_at field.
+	project.DefaultCreatedAt = projectDescCreatedAt.Default.(func() time.Time)
+	// projectDescIsDeleted is the schema descriptor for is_deleted field.
+	projectDescIsDeleted := projectFields[7].Descriptor()
+	// project.DefaultIsDeleted holds the default value on creation for the is_deleted field.
+	project.DefaultIsDeleted = projectDescIsDeleted.Default.(bool)
+	projectchangelogFields := schema.ProjectChangeLog{}.Fields()
+	_ = projectchangelogFields
+	// projectchangelogDescCreatedAt is the schema descriptor for created_at field.
+	projectchangelogDescCreatedAt := projectchangelogFields[3].Descriptor()
+	// projectchangelog.DefaultCreatedAt holds the default value on creation for the created_at field.
+	projectchangelog.DefaultCreatedAt = projectchangelogDescCreatedAt.Default.(func() time.Time)
+	// projectchangelogDescIsDeleted is the schema descriptor for is_deleted field.
+	projectchangelogDescIsDeleted := projectchangelogFields[4].Descriptor()
+	// projectchangelog.DefaultIsDeleted holds the default value on creation for the is_deleted field.
+	projectchangelog.DefaultIsDeleted = projectchangelogDescIsDeleted.Default.(bool)
 }
