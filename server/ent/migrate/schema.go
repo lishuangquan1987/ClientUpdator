@@ -12,9 +12,9 @@ var (
 	ProjectsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
+		{Name: "title", Type: field.TypeString},
 		{Name: "version", Type: field.TypeString},
 		{Name: "force_update", Type: field.TypeBool},
-		{Name: "watch_dir", Type: field.TypeString},
 		{Name: "ignore_folders", Type: field.TypeJSON, Nullable: true},
 		{Name: "ignore_files", Type: field.TypeJSON, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},

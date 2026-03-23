@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"clientupdator/server/ent"
 	"clientupdator/server/internal/service"
 	"clientupdator/server/models"
 	"fmt"
@@ -20,16 +19,16 @@ func UploadFile(ctx *gin.Context) {
 	}
 
 	var fileInfo struct {
-		ProjectId int    `json:"projectId"`
-		FileName  string `json:"fileName"`
+		ProjectName string `json:"projectName"`
+		FileName    string `json:"fileName"`
 	}
 	if err := ctx.ShouldBindJSON(&fileInfo); err != nil {
 		ctx.JSON(200, models.NGWithError(err))
 		return
 	}
 
-	if fileInfo.ProjectId <= 0 {
-		ctx.JSON(200, models.NG("项目ID不能为空"))
+	if len(fileInfo.ProjectName) == 0 {
+		ctx.JSON(200, models.NG("项目名称不能为空"))
 		return
 	}
 	if len(fileInfo.FileName) == 0 {
@@ -37,21 +36,14 @@ func UploadFile(ctx *gin.Context) {
 		return
 	}
 
-	//查询Project是否存在
-	projectResult := service.GetProjectById(fileInfo.ProjectId)
-	if !projectResult.IsSuccess {
-		ctx.JSON(200, projectResult)
+	workDir, err := service.GetProjectWorkPath(fileInfo.ProjectName)
+	if err != nil {
+		ctx.JSON(200, models.NGWithError(err))
 		return
 	}
-
-	if projectResult.Data == nil {
-		ctx.JSON(200, models.NG("项目不存在"))
-		return
-	}
-	entity := projectResult.Data.(*ent.Project)
 
 	fileName := stringUtils.Replace(fileInfo.FileName, "\\", "/")
-	absFileName := path.Combine(entity.WatchDir, fileName)
+	absFileName := path.Combine(workDir, fileName)
 	dir := path.GetDirectoryName(absFileName)
 	if !directory.Exists(dir) {
 		if err = directory.CreateDirectory(dir); err != nil {

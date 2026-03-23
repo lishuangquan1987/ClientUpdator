@@ -27,6 +27,12 @@ func (_c *ProjectCreate) SetName(v string) *ProjectCreate {
 	return _c
 }
 
+// SetTitle sets the "title" field.
+func (_c *ProjectCreate) SetTitle(v string) *ProjectCreate {
+	_c.mutation.SetTitle(v)
+	return _c
+}
+
 // SetVersion sets the "version" field.
 func (_c *ProjectCreate) SetVersion(v string) *ProjectCreate {
 	_c.mutation.SetVersion(v)
@@ -36,12 +42,6 @@ func (_c *ProjectCreate) SetVersion(v string) *ProjectCreate {
 // SetForceUpdate sets the "force_update" field.
 func (_c *ProjectCreate) SetForceUpdate(v bool) *ProjectCreate {
 	_c.mutation.SetForceUpdate(v)
-	return _c
-}
-
-// SetWatchDir sets the "watch_dir" field.
-func (_c *ProjectCreate) SetWatchDir(v string) *ProjectCreate {
-	_c.mutation.SetWatchDir(v)
 	return _c
 }
 
@@ -150,14 +150,14 @@ func (_c *ProjectCreate) check() error {
 	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Project.name"`)}
 	}
+	if _, ok := _c.mutation.Title(); !ok {
+		return &ValidationError{Name: "title", err: errors.New(`ent: missing required field "Project.title"`)}
+	}
 	if _, ok := _c.mutation.Version(); !ok {
 		return &ValidationError{Name: "version", err: errors.New(`ent: missing required field "Project.version"`)}
 	}
 	if _, ok := _c.mutation.ForceUpdate(); !ok {
 		return &ValidationError{Name: "force_update", err: errors.New(`ent: missing required field "Project.force_update"`)}
-	}
-	if _, ok := _c.mutation.WatchDir(); !ok {
-		return &ValidationError{Name: "watch_dir", err: errors.New(`ent: missing required field "Project.watch_dir"`)}
 	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Project.created_at"`)}
@@ -195,6 +195,10 @@ func (_c *ProjectCreate) createSpec() (*Project, *sqlgraph.CreateSpec) {
 		_spec.SetField(project.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
+	if value, ok := _c.mutation.Title(); ok {
+		_spec.SetField(project.FieldTitle, field.TypeString, value)
+		_node.Title = value
+	}
 	if value, ok := _c.mutation.Version(); ok {
 		_spec.SetField(project.FieldVersion, field.TypeString, value)
 		_node.Version = value
@@ -202,10 +206,6 @@ func (_c *ProjectCreate) createSpec() (*Project, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.ForceUpdate(); ok {
 		_spec.SetField(project.FieldForceUpdate, field.TypeBool, value)
 		_node.ForceUpdate = value
-	}
-	if value, ok := _c.mutation.WatchDir(); ok {
-		_spec.SetField(project.FieldWatchDir, field.TypeString, value)
-		_node.WatchDir = value
 	}
 	if value, ok := _c.mutation.IgnoreFolders(); ok {
 		_spec.SetField(project.FieldIgnoreFolders, field.TypeJSON, value)

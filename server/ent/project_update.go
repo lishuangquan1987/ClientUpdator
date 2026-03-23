@@ -44,6 +44,20 @@ func (_u *ProjectUpdate) SetNillableName(v *string) *ProjectUpdate {
 	return _u
 }
 
+// SetTitle sets the "title" field.
+func (_u *ProjectUpdate) SetTitle(v string) *ProjectUpdate {
+	_u.mutation.SetTitle(v)
+	return _u
+}
+
+// SetNillableTitle sets the "title" field if the given value is not nil.
+func (_u *ProjectUpdate) SetNillableTitle(v *string) *ProjectUpdate {
+	if v != nil {
+		_u.SetTitle(*v)
+	}
+	return _u
+}
+
 // SetVersion sets the "version" field.
 func (_u *ProjectUpdate) SetVersion(v string) *ProjectUpdate {
 	_u.mutation.SetVersion(v)
@@ -68,20 +82,6 @@ func (_u *ProjectUpdate) SetForceUpdate(v bool) *ProjectUpdate {
 func (_u *ProjectUpdate) SetNillableForceUpdate(v *bool) *ProjectUpdate {
 	if v != nil {
 		_u.SetForceUpdate(*v)
-	}
-	return _u
-}
-
-// SetWatchDir sets the "watch_dir" field.
-func (_u *ProjectUpdate) SetWatchDir(v string) *ProjectUpdate {
-	_u.mutation.SetWatchDir(v)
-	return _u
-}
-
-// SetNillableWatchDir sets the "watch_dir" field if the given value is not nil.
-func (_u *ProjectUpdate) SetNillableWatchDir(v *string) *ProjectUpdate {
-	if v != nil {
-		_u.SetWatchDir(*v)
 	}
 	return _u
 }
@@ -230,14 +230,14 @@ func (_u *ProjectUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(project.FieldName, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.Title(); ok {
+		_spec.SetField(project.FieldTitle, field.TypeString, value)
+	}
 	if value, ok := _u.mutation.Version(); ok {
 		_spec.SetField(project.FieldVersion, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.ForceUpdate(); ok {
 		_spec.SetField(project.FieldForceUpdate, field.TypeBool, value)
-	}
-	if value, ok := _u.mutation.WatchDir(); ok {
-		_spec.SetField(project.FieldWatchDir, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.IgnoreFolders(); ok {
 		_spec.SetField(project.FieldIgnoreFolders, field.TypeJSON, value)
@@ -346,6 +346,20 @@ func (_u *ProjectUpdateOne) SetNillableName(v *string) *ProjectUpdateOne {
 	return _u
 }
 
+// SetTitle sets the "title" field.
+func (_u *ProjectUpdateOne) SetTitle(v string) *ProjectUpdateOne {
+	_u.mutation.SetTitle(v)
+	return _u
+}
+
+// SetNillableTitle sets the "title" field if the given value is not nil.
+func (_u *ProjectUpdateOne) SetNillableTitle(v *string) *ProjectUpdateOne {
+	if v != nil {
+		_u.SetTitle(*v)
+	}
+	return _u
+}
+
 // SetVersion sets the "version" field.
 func (_u *ProjectUpdateOne) SetVersion(v string) *ProjectUpdateOne {
 	_u.mutation.SetVersion(v)
@@ -370,20 +384,6 @@ func (_u *ProjectUpdateOne) SetForceUpdate(v bool) *ProjectUpdateOne {
 func (_u *ProjectUpdateOne) SetNillableForceUpdate(v *bool) *ProjectUpdateOne {
 	if v != nil {
 		_u.SetForceUpdate(*v)
-	}
-	return _u
-}
-
-// SetWatchDir sets the "watch_dir" field.
-func (_u *ProjectUpdateOne) SetWatchDir(v string) *ProjectUpdateOne {
-	_u.mutation.SetWatchDir(v)
-	return _u
-}
-
-// SetNillableWatchDir sets the "watch_dir" field if the given value is not nil.
-func (_u *ProjectUpdateOne) SetNillableWatchDir(v *string) *ProjectUpdateOne {
-	if v != nil {
-		_u.SetWatchDir(*v)
 	}
 	return _u
 }
@@ -562,14 +562,14 @@ func (_u *ProjectUpdateOne) sqlSave(ctx context.Context) (_node *Project, err er
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(project.FieldName, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.Title(); ok {
+		_spec.SetField(project.FieldTitle, field.TypeString, value)
+	}
 	if value, ok := _u.mutation.Version(); ok {
 		_spec.SetField(project.FieldVersion, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.ForceUpdate(); ok {
 		_spec.SetField(project.FieldForceUpdate, field.TypeBool, value)
-	}
-	if value, ok := _u.mutation.WatchDir(); ok {
-		_spec.SetField(project.FieldWatchDir, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.IgnoreFolders(); ok {
 		_spec.SetField(project.FieldIgnoreFolders, field.TypeJSON, value)

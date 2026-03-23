@@ -7,11 +7,22 @@ import (
 	"clientupdator/server/internal/db"
 	"clientupdator/server/models"
 	"context"
+	"os"
 
 	"github.com/utils-go/ngo/datetime"
+	"github.com/utils-go/ngo/io/path"
 )
 
-func CreateProjectWithFirstLog(name string, watchDir string, isForceUpdate bool, ignoreFolders []string, ignoreFiles []string) models.CommonResponse {
+func GetProjectWorkPath(projectName string) (string, error) {
+	dir, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	return path.Combine(dir, "data", projectName), nil
+}
+
+func CreateProjectWithFirstLog(name string, title string, isForceUpdate bool, ignoreFolders []string, ignoreFiles []string) models.CommonResponse {
 	ctx := context.Background()
 	var project *ent.Project
 	err := db.WithTx(ctx, func(tx *ent.Tx) error {
@@ -19,8 +30,8 @@ func CreateProjectWithFirstLog(name string, watchDir string, isForceUpdate bool,
 		var err error
 		project, err = tx.Project.Create().
 			SetName(name).
+			SetTitle(title).
 			SetVersion("V1.0.0").
-			SetWatchDir(watchDir).
 			SetForceUpdate(isForceUpdate).
 			SetIgnoreFolders(ignoreFolders).
 			SetIgnoreFiles(ignoreFiles).
@@ -42,20 +53,19 @@ func CreateProjectWithFirstLog(name string, watchDir string, isForceUpdate bool,
 	})
 	if err != nil {
 		return models.NGWithError(err)
-	} else {
-		return models.OKWithData(project)
 	}
+
+	return models.OKWithData(project)
 }
 
-func UpdateProject(id int, name string, watchDir string, isForceUpdate bool, ignoreFolders []string, ignoreFiles []string) models.CommonResponse {
+func UpdateProject(id int, title string, isForceUpdate bool, ignoreFolders []string, ignoreFiles []string) models.CommonResponse {
 	ctx := context.Background()
 	err := db.WithTx(ctx, func(tx *ent.Tx) error {
 		//更新项目
 		var err error
 		_, err = tx.Project.Update().
 			Where(project.IDEQ(id)).
-			SetName(name).
-			SetWatchDir(watchDir).
+			SetTitle(title).
 			SetForceUpdate(isForceUpdate).
 			SetIgnoreFolders(ignoreFolders).
 			SetIgnoreFiles(ignoreFiles).
@@ -67,9 +77,9 @@ func UpdateProject(id int, name string, watchDir string, isForceUpdate bool, ign
 	})
 	if err != nil {
 		return models.NGWithError(err)
-	} else {
-		return models.OK()
 	}
+
+	return models.OK()
 }
 
 func GetAllProjects() models.CommonResponse {
@@ -77,9 +87,9 @@ func GetAllProjects() models.CommonResponse {
 	projects, err := db.Client.Project.Query().Where(project.IsDeletedEQ(false)).All(ctx)
 	if err != nil {
 		return models.NGWithError(err)
-	} else {
-		return models.OKWithData(projects)
 	}
+
+	return models.OKWithData(projects)
 }
 
 func GetProjectChangeLogs(projectId int) models.CommonResponse {
@@ -91,9 +101,9 @@ func GetProjectChangeLogs(projectId int) models.CommonResponse {
 		All(ctx)
 	if err != nil {
 		return models.NGWithError(err)
-	} else {
-		return models.OKWithData(projectLogs)
 	}
+
+	return models.OKWithData(projectLogs)
 }
 
 func GetProjectById(projectId int) models.CommonResponse {

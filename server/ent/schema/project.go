@@ -16,10 +16,10 @@ type Project struct {
 // Fields of the Project.
 func (Project) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("name").Comment("项目名称"),
+		field.String("name").Comment("项目名称，用于创建文件夹保存文件，创建后不能更改"),
+		field.String("title").Comment("项目抬头"),
 		field.String("version").Comment("项目版本"),
 		field.Bool("force_update").Comment("是否强制更新"),
-		field.String("watch_dir").Comment("监控文件夹"),
 		field.JSON("ignore_folders", []string{}).Optional().Comment("忽略的文件夹"),
 		field.JSON("ignore_files", []string{}).Optional().Comment("忽略的文件"),
 		field.Time("created_at").Default(time.Now).Comment("创建日期"),

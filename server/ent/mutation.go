@@ -36,9 +36,9 @@ type ProjectMutation struct {
 	typ                  string
 	id                   *int
 	name                 *string
+	title                *string
 	version              *string
 	force_update         *bool
-	watch_dir            *string
 	ignore_folders       *[]string
 	appendignore_folders []string
 	ignore_files         *[]string
@@ -188,6 +188,42 @@ func (m *ProjectMutation) ResetName() {
 	m.name = nil
 }
 
+// SetTitle sets the "title" field.
+func (m *ProjectMutation) SetTitle(s string) {
+	m.title = &s
+}
+
+// Title returns the value of the "title" field in the mutation.
+func (m *ProjectMutation) Title() (r string, exists bool) {
+	v := m.title
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTitle returns the old "title" field's value of the Project entity.
+// If the Project object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProjectMutation) OldTitle(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTitle is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTitle requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTitle: %w", err)
+	}
+	return oldValue.Title, nil
+}
+
+// ResetTitle resets all changes to the "title" field.
+func (m *ProjectMutation) ResetTitle() {
+	m.title = nil
+}
+
 // SetVersion sets the "version" field.
 func (m *ProjectMutation) SetVersion(s string) {
 	m.version = &s
@@ -258,42 +294,6 @@ func (m *ProjectMutation) OldForceUpdate(ctx context.Context) (v bool, err error
 // ResetForceUpdate resets all changes to the "force_update" field.
 func (m *ProjectMutation) ResetForceUpdate() {
 	m.force_update = nil
-}
-
-// SetWatchDir sets the "watch_dir" field.
-func (m *ProjectMutation) SetWatchDir(s string) {
-	m.watch_dir = &s
-}
-
-// WatchDir returns the value of the "watch_dir" field in the mutation.
-func (m *ProjectMutation) WatchDir() (r string, exists bool) {
-	v := m.watch_dir
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldWatchDir returns the old "watch_dir" field's value of the Project entity.
-// If the Project object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ProjectMutation) OldWatchDir(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldWatchDir is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldWatchDir requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldWatchDir: %w", err)
-	}
-	return oldValue.WatchDir, nil
-}
-
-// ResetWatchDir resets all changes to the "watch_dir" field.
-func (m *ProjectMutation) ResetWatchDir() {
-	m.watch_dir = nil
 }
 
 // SetIgnoreFolders sets the "ignore_folders" field.
@@ -590,14 +590,14 @@ func (m *ProjectMutation) Fields() []string {
 	if m.name != nil {
 		fields = append(fields, project.FieldName)
 	}
+	if m.title != nil {
+		fields = append(fields, project.FieldTitle)
+	}
 	if m.version != nil {
 		fields = append(fields, project.FieldVersion)
 	}
 	if m.force_update != nil {
 		fields = append(fields, project.FieldForceUpdate)
-	}
-	if m.watch_dir != nil {
-		fields = append(fields, project.FieldWatchDir)
 	}
 	if m.ignore_folders != nil {
 		fields = append(fields, project.FieldIgnoreFolders)
@@ -621,12 +621,12 @@ func (m *ProjectMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case project.FieldName:
 		return m.Name()
+	case project.FieldTitle:
+		return m.Title()
 	case project.FieldVersion:
 		return m.Version()
 	case project.FieldForceUpdate:
 		return m.ForceUpdate()
-	case project.FieldWatchDir:
-		return m.WatchDir()
 	case project.FieldIgnoreFolders:
 		return m.IgnoreFolders()
 	case project.FieldIgnoreFiles:
@@ -646,12 +646,12 @@ func (m *ProjectMutation) OldField(ctx context.Context, name string) (ent.Value,
 	switch name {
 	case project.FieldName:
 		return m.OldName(ctx)
+	case project.FieldTitle:
+		return m.OldTitle(ctx)
 	case project.FieldVersion:
 		return m.OldVersion(ctx)
 	case project.FieldForceUpdate:
 		return m.OldForceUpdate(ctx)
-	case project.FieldWatchDir:
-		return m.OldWatchDir(ctx)
 	case project.FieldIgnoreFolders:
 		return m.OldIgnoreFolders(ctx)
 	case project.FieldIgnoreFiles:
@@ -676,6 +676,13 @@ func (m *ProjectMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetName(v)
 		return nil
+	case project.FieldTitle:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTitle(v)
+		return nil
 	case project.FieldVersion:
 		v, ok := value.(string)
 		if !ok {
@@ -689,13 +696,6 @@ func (m *ProjectMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetForceUpdate(v)
-		return nil
-	case project.FieldWatchDir:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetWatchDir(v)
 		return nil
 	case project.FieldIgnoreFolders:
 		v, ok := value.([]string)
@@ -792,14 +792,14 @@ func (m *ProjectMutation) ResetField(name string) error {
 	case project.FieldName:
 		m.ResetName()
 		return nil
+	case project.FieldTitle:
+		m.ResetTitle()
+		return nil
 	case project.FieldVersion:
 		m.ResetVersion()
 		return nil
 	case project.FieldForceUpdate:
 		m.ResetForceUpdate()
-		return nil
-	case project.FieldWatchDir:
-		m.ResetWatchDir()
 		return nil
 	case project.FieldIgnoreFolders:
 		m.ResetIgnoreFolders()

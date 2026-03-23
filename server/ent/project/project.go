@@ -16,12 +16,12 @@ const (
 	FieldID = "id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
+	// FieldTitle holds the string denoting the title field in the database.
+	FieldTitle = "title"
 	// FieldVersion holds the string denoting the version field in the database.
 	FieldVersion = "version"
 	// FieldForceUpdate holds the string denoting the force_update field in the database.
 	FieldForceUpdate = "force_update"
-	// FieldWatchDir holds the string denoting the watch_dir field in the database.
-	FieldWatchDir = "watch_dir"
 	// FieldIgnoreFolders holds the string denoting the ignore_folders field in the database.
 	FieldIgnoreFolders = "ignore_folders"
 	// FieldIgnoreFiles holds the string denoting the ignore_files field in the database.
@@ -47,9 +47,9 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldName,
+	FieldTitle,
 	FieldVersion,
 	FieldForceUpdate,
-	FieldWatchDir,
 	FieldIgnoreFolders,
 	FieldIgnoreFiles,
 	FieldCreatedAt,
@@ -86,6 +86,11 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
 }
 
+// ByTitle orders the results by the title field.
+func ByTitle(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTitle, opts...).ToFunc()
+}
+
 // ByVersion orders the results by the version field.
 func ByVersion(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldVersion, opts...).ToFunc()
@@ -94,11 +99,6 @@ func ByVersion(opts ...sql.OrderTermOption) OrderOption {
 // ByForceUpdate orders the results by the force_update field.
 func ByForceUpdate(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldForceUpdate, opts...).ToFunc()
-}
-
-// ByWatchDir orders the results by the watch_dir field.
-func ByWatchDir(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldWatchDir, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

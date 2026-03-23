@@ -18,14 +18,14 @@ type Project struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// 项目名称
+	// 项目名称，用于创建文件夹保存文件，创建后不能更改
 	Name string `json:"name,omitempty"`
+	// 项目抬头
+	Title string `json:"title,omitempty"`
 	// 项目版本
 	Version string `json:"version,omitempty"`
 	// 是否强制更新
 	ForceUpdate bool `json:"force_update,omitempty"`
-	// 监控文件夹
-	WatchDir string `json:"watch_dir,omitempty"`
 	// 忽略的文件夹
 	IgnoreFolders []string `json:"ignore_folders,omitempty"`
 	// 忽略的文件
@@ -69,7 +69,7 @@ func (*Project) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case project.FieldID:
 			values[i] = new(sql.NullInt64)
-		case project.FieldName, project.FieldVersion, project.FieldWatchDir:
+		case project.FieldName, project.FieldTitle, project.FieldVersion:
 			values[i] = new(sql.NullString)
 		case project.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -100,6 +100,12 @@ func (_m *Project) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Name = value.String
 			}
+		case project.FieldTitle:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field title", values[i])
+			} else if value.Valid {
+				_m.Title = value.String
+			}
 		case project.FieldVersion:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field version", values[i])
@@ -111,12 +117,6 @@ func (_m *Project) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field force_update", values[i])
 			} else if value.Valid {
 				_m.ForceUpdate = value.Bool
-			}
-		case project.FieldWatchDir:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field watch_dir", values[i])
-			} else if value.Valid {
-				_m.WatchDir = value.String
 			}
 		case project.FieldIgnoreFolders:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -190,14 +190,14 @@ func (_m *Project) String() string {
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
+	builder.WriteString("title=")
+	builder.WriteString(_m.Title)
+	builder.WriteString(", ")
 	builder.WriteString("version=")
 	builder.WriteString(_m.Version)
 	builder.WriteString(", ")
 	builder.WriteString("force_update=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ForceUpdate))
-	builder.WriteString(", ")
-	builder.WriteString("watch_dir=")
-	builder.WriteString(_m.WatchDir)
 	builder.WriteString(", ")
 	builder.WriteString("ignore_folders=")
 	builder.WriteString(fmt.Sprintf("%v", _m.IgnoreFolders))

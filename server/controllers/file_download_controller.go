@@ -30,7 +30,13 @@ func GetAllFilesByProjectId(ctx *gin.Context) {
 	}
 
 	p := projectResult.Data.(*ent.Project)
-	files, err := directory.GetFiles(p.WatchDir, "*,*", true)
+
+	workDir, err := service.GetProjectWorkPath(p.Name)
+	if err != nil {
+		ctx.JSON(200, models.NGWithError(err))
+		return
+	}
+	files, err := directory.GetFiles(workDir, "*,*", true)
 	//查询文件
 	if err != nil {
 		ctx.JSON(200, models.NGWithError(err))
@@ -42,7 +48,7 @@ func GetAllFilesByProjectId(ctx *gin.Context) {
 		//f是全路径
 		f := files[i]
 		//获取相对路径
-		relPath, _ := path.GetRelativePath(p.WatchDir, f)
+		relPath, _ := path.GetRelativePath(workDir, f)
 		if linq.From[string](p.IgnoreFolders).Where(func(ignoreFolder string) bool {
 			return path.IsSubPath(relPath, ignoreFolder)
 		}).Count() > 0 {

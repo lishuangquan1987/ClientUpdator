@@ -60,6 +60,11 @@ func Name(v string) predicate.Project {
 	return predicate.Project(sql.FieldEQ(FieldName, v))
 }
 
+// Title applies equality check predicate on the "title" field. It's identical to TitleEQ.
+func Title(v string) predicate.Project {
+	return predicate.Project(sql.FieldEQ(FieldTitle, v))
+}
+
 // Version applies equality check predicate on the "version" field. It's identical to VersionEQ.
 func Version(v string) predicate.Project {
 	return predicate.Project(sql.FieldEQ(FieldVersion, v))
@@ -68,11 +73,6 @@ func Version(v string) predicate.Project {
 // ForceUpdate applies equality check predicate on the "force_update" field. It's identical to ForceUpdateEQ.
 func ForceUpdate(v bool) predicate.Project {
 	return predicate.Project(sql.FieldEQ(FieldForceUpdate, v))
-}
-
-// WatchDir applies equality check predicate on the "watch_dir" field. It's identical to WatchDirEQ.
-func WatchDir(v string) predicate.Project {
-	return predicate.Project(sql.FieldEQ(FieldWatchDir, v))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -150,6 +150,71 @@ func NameContainsFold(v string) predicate.Project {
 	return predicate.Project(sql.FieldContainsFold(FieldName, v))
 }
 
+// TitleEQ applies the EQ predicate on the "title" field.
+func TitleEQ(v string) predicate.Project {
+	return predicate.Project(sql.FieldEQ(FieldTitle, v))
+}
+
+// TitleNEQ applies the NEQ predicate on the "title" field.
+func TitleNEQ(v string) predicate.Project {
+	return predicate.Project(sql.FieldNEQ(FieldTitle, v))
+}
+
+// TitleIn applies the In predicate on the "title" field.
+func TitleIn(vs ...string) predicate.Project {
+	return predicate.Project(sql.FieldIn(FieldTitle, vs...))
+}
+
+// TitleNotIn applies the NotIn predicate on the "title" field.
+func TitleNotIn(vs ...string) predicate.Project {
+	return predicate.Project(sql.FieldNotIn(FieldTitle, vs...))
+}
+
+// TitleGT applies the GT predicate on the "title" field.
+func TitleGT(v string) predicate.Project {
+	return predicate.Project(sql.FieldGT(FieldTitle, v))
+}
+
+// TitleGTE applies the GTE predicate on the "title" field.
+func TitleGTE(v string) predicate.Project {
+	return predicate.Project(sql.FieldGTE(FieldTitle, v))
+}
+
+// TitleLT applies the LT predicate on the "title" field.
+func TitleLT(v string) predicate.Project {
+	return predicate.Project(sql.FieldLT(FieldTitle, v))
+}
+
+// TitleLTE applies the LTE predicate on the "title" field.
+func TitleLTE(v string) predicate.Project {
+	return predicate.Project(sql.FieldLTE(FieldTitle, v))
+}
+
+// TitleContains applies the Contains predicate on the "title" field.
+func TitleContains(v string) predicate.Project {
+	return predicate.Project(sql.FieldContains(FieldTitle, v))
+}
+
+// TitleHasPrefix applies the HasPrefix predicate on the "title" field.
+func TitleHasPrefix(v string) predicate.Project {
+	return predicate.Project(sql.FieldHasPrefix(FieldTitle, v))
+}
+
+// TitleHasSuffix applies the HasSuffix predicate on the "title" field.
+func TitleHasSuffix(v string) predicate.Project {
+	return predicate.Project(sql.FieldHasSuffix(FieldTitle, v))
+}
+
+// TitleEqualFold applies the EqualFold predicate on the "title" field.
+func TitleEqualFold(v string) predicate.Project {
+	return predicate.Project(sql.FieldEqualFold(FieldTitle, v))
+}
+
+// TitleContainsFold applies the ContainsFold predicate on the "title" field.
+func TitleContainsFold(v string) predicate.Project {
+	return predicate.Project(sql.FieldContainsFold(FieldTitle, v))
+}
+
 // VersionEQ applies the EQ predicate on the "version" field.
 func VersionEQ(v string) predicate.Project {
 	return predicate.Project(sql.FieldEQ(FieldVersion, v))
@@ -223,71 +288,6 @@ func ForceUpdateEQ(v bool) predicate.Project {
 // ForceUpdateNEQ applies the NEQ predicate on the "force_update" field.
 func ForceUpdateNEQ(v bool) predicate.Project {
 	return predicate.Project(sql.FieldNEQ(FieldForceUpdate, v))
-}
-
-// WatchDirEQ applies the EQ predicate on the "watch_dir" field.
-func WatchDirEQ(v string) predicate.Project {
-	return predicate.Project(sql.FieldEQ(FieldWatchDir, v))
-}
-
-// WatchDirNEQ applies the NEQ predicate on the "watch_dir" field.
-func WatchDirNEQ(v string) predicate.Project {
-	return predicate.Project(sql.FieldNEQ(FieldWatchDir, v))
-}
-
-// WatchDirIn applies the In predicate on the "watch_dir" field.
-func WatchDirIn(vs ...string) predicate.Project {
-	return predicate.Project(sql.FieldIn(FieldWatchDir, vs...))
-}
-
-// WatchDirNotIn applies the NotIn predicate on the "watch_dir" field.
-func WatchDirNotIn(vs ...string) predicate.Project {
-	return predicate.Project(sql.FieldNotIn(FieldWatchDir, vs...))
-}
-
-// WatchDirGT applies the GT predicate on the "watch_dir" field.
-func WatchDirGT(v string) predicate.Project {
-	return predicate.Project(sql.FieldGT(FieldWatchDir, v))
-}
-
-// WatchDirGTE applies the GTE predicate on the "watch_dir" field.
-func WatchDirGTE(v string) predicate.Project {
-	return predicate.Project(sql.FieldGTE(FieldWatchDir, v))
-}
-
-// WatchDirLT applies the LT predicate on the "watch_dir" field.
-func WatchDirLT(v string) predicate.Project {
-	return predicate.Project(sql.FieldLT(FieldWatchDir, v))
-}
-
-// WatchDirLTE applies the LTE predicate on the "watch_dir" field.
-func WatchDirLTE(v string) predicate.Project {
-	return predicate.Project(sql.FieldLTE(FieldWatchDir, v))
-}
-
-// WatchDirContains applies the Contains predicate on the "watch_dir" field.
-func WatchDirContains(v string) predicate.Project {
-	return predicate.Project(sql.FieldContains(FieldWatchDir, v))
-}
-
-// WatchDirHasPrefix applies the HasPrefix predicate on the "watch_dir" field.
-func WatchDirHasPrefix(v string) predicate.Project {
-	return predicate.Project(sql.FieldHasPrefix(FieldWatchDir, v))
-}
-
-// WatchDirHasSuffix applies the HasSuffix predicate on the "watch_dir" field.
-func WatchDirHasSuffix(v string) predicate.Project {
-	return predicate.Project(sql.FieldHasSuffix(FieldWatchDir, v))
-}
-
-// WatchDirEqualFold applies the EqualFold predicate on the "watch_dir" field.
-func WatchDirEqualFold(v string) predicate.Project {
-	return predicate.Project(sql.FieldEqualFold(FieldWatchDir, v))
-}
-
-// WatchDirContainsFold applies the ContainsFold predicate on the "watch_dir" field.
-func WatchDirContainsFold(v string) predicate.Project {
-	return predicate.Project(sql.FieldContainsFold(FieldWatchDir, v))
 }
 
 // IgnoreFoldersIsNil applies the IsNil predicate on the "ignore_folders" field.

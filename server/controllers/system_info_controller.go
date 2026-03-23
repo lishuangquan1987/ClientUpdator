@@ -29,12 +29,17 @@ func GetServerOSInfo(ctx *gin.Context) {
 	}
 
 	project := projectResult.Data.(*ent.Project)
+	workDir, err := service.GetProjectWorkPath(project.Name)
+	if err != nil {
+		ctx.JSON(200, models.NGWithError(err))
+		return
+	}
 
 	platform, _, _, _ := host.PlatformInformation() //内核信息
 
 	infos, _ := cpu.Info() //cpu信息工具类
 
-	diskInfo, _ := disk.Usage(project.WatchDir) //获取客户端更新文件所在盘的容量信息
+	diskInfo, _ := disk.Usage(workDir) //获取客户端更新文件所在盘的容量信息
 
 	serverOSInfo := make([]models.ServerOSInfo, 0)
 	serverOSInfo = append(serverOSInfo, models.ServerOSInfo{

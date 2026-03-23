@@ -15,7 +15,7 @@ import (
 func CreateProject(ctx *gin.Context) {
 	var createProjectDto struct {
 		Name          string   `json:"name"`
-		WatchDir      string   `json:"watch_dir"`
+		Title         string   `json:"title"`
 		IsForceUpdate bool     `json:"is_force_update"`
 		IgnoreFolders []string `json:"ignore_folders"`
 		IgnoreFiles   []string `json:"ignore_files"`
@@ -31,29 +31,37 @@ func CreateProject(ctx *gin.Context) {
 		ctx.JSON(200, models.NG("项目名称不能为空"))
 		return
 	}
-	//判断监控文件夹是否为空
-	if createProjectDto.WatchDir == "" {
-		ctx.JSON(200, models.NG("监控文件夹不能为空"))
+
+	if createProjectDto.Title == "" {
+		ctx.JSON(200, "项目抬头不能为空")
 		return
 	}
-	if !directory.Exists(createProjectDto.WatchDir) {
-		//创建文件夹
-		if err := directory.CreateDirectory(createProjectDto.WatchDir); err != nil {
-			ctx.JSON(200, models.NGWithError(err))
-			return
-		}
+
+	workDir, err := service.GetProjectWorkPath(createProjectDto.Name)
+	if err != nil {
+		ctx.JSON(200, models.NGWithError(err))
+		return
 	}
+
 	//判断项目名称是否存在
-	_, err := db.Client.Project.Query().Where(project.NameEQ(createProjectDto.Name)).First(ctx)
+	_, err = db.Client.Project.Query().Where(project.NameEQ(createProjectDto.Name)).First(ctx)
 	if err == nil {
 		ctx.JSON(200, models.NG(fmt.Sprintf("项目名称:%s已存在", createProjectDto.Name)))
 		return
 	}
 
+	if !directory.Exists(workDir) {
+		//创建文件夹
+		if err := directory.CreateDirectory(workDir); err != nil {
+			ctx.JSON(200, models.NGWithError(err))
+			return
+		}
+	}
+
 	//插入
 	result := service.CreateProjectWithFirstLog(
 		createProjectDto.Name,
-		createProjectDto.WatchDir,
+		createProjectDto.Title,
 		createProjectDto.IsForceUpdate,
 		createProjectDto.IgnoreFolders,
 		createProjectDto.IgnoreFiles)
@@ -64,8 +72,7 @@ func CreateProject(ctx *gin.Context) {
 func UpdateProject(ctx *gin.Context) {
 	var updateProjectDto struct {
 		ID            int      `json:"id"`
-		Name          string   `json:"name"`
-		WatchDir      string   `json:"watch_dir"`
+		Title         string   `json:"title"`
 		IsForceUpdate bool     `json:"is_force_update"`
 		IgnoreFolders []string `json:"ignore_folders"`
 		IgnoreFiles   []string `json:"ignore_files"`
@@ -80,21 +87,9 @@ func UpdateProject(ctx *gin.Context) {
 	}
 
 	//判断项目名称是否为空
-	if updateProjectDto.Name == "" {
+	if updateProjectDto.Title == "" {
 		ctx.JSON(200, models.NG("项目名称不能为空"))
 		return
-	}
-	//判断监控文件夹是否为空
-	if updateProjectDto.WatchDir == "" {
-		ctx.JSON(200, models.NG("监控文件夹不能为空"))
-		return
-	}
-	if !directory.Exists(updateProjectDto.WatchDir) {
-		//创建文件夹
-		if err := directory.CreateDirectory(updateProjectDto.WatchDir); err != nil {
-			ctx.JSON(200, models.NGWithError(err))
-			return
-		}
 	}
 
 	//判断项目名称是否存在
@@ -102,17 +97,16 @@ func UpdateProject(ctx *gin.Context) {
 	if err != nil {
 		if ent.IsNotFound(err) {
 			ctx.JSON(200, models.NG("项目不存在"))
-			return
+		} else {
+			ctx.JSON(200, models.NGWithError(err))
 		}
-		ctx.JSON(200, models.NGWithError(err))
 		return
 	}
 
 	//更新
 	result := service.UpdateProject(
 		updateProjectDto.ID,
-		updateProjectDto.Name,
-		updateProjectDto.WatchDir,
+		updateProjectDto.Title,
 		updateProjectDto.IsForceUpdate,
 		updateProjectDto.IgnoreFolders,
 		updateProjectDto.IgnoreFiles)
