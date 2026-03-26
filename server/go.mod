@@ -3,10 +3,10 @@ module clientupdator/server
 go 1.25.0
 
 require (
-	entgo.io/ent v0.14.5
+	entgo.io/ent v0.14.6
 	github.com/gin-gonic/gin v1.12.0
 	github.com/shirou/gopsutil v3.21.11+incompatible
-	github.com/utils-go/ngo v0.0.25
+	github.com/utils-go/ngo v0.0.26
 	modernc.org/sqlite v1.47.0
 )
 

@@ -19,10 +19,10 @@ func UploadFile(ctx *gin.Context) {
 	}
 
 	var fileInfo struct {
-		ProjectName string `json:"projectName"`
-		FileName    string `json:"fileName"`
+		ProjectName string `form:"projectName"`
+		RelativeFileName    string `form:"relativeFileName"`
 	}
-	if err := ctx.ShouldBindJSON(&fileInfo); err != nil {
+	if err := ctx.ShouldBind(&fileInfo); err != nil {
 		ctx.JSON(200, models.NGWithError(err))
 		return
 	}
@@ -31,7 +31,7 @@ func UploadFile(ctx *gin.Context) {
 		ctx.JSON(200, models.NG("项目名称不能为空"))
 		return
 	}
-	if len(fileInfo.FileName) == 0 {
+	if len(fileInfo.RelativeFileName) == 0 {
 		ctx.JSON(200, models.NG("header中必须包含FileName"))
 		return
 	}
@@ -42,7 +42,7 @@ func UploadFile(ctx *gin.Context) {
 		return
 	}
 
-	fileName := stringUtils.Replace(fileInfo.FileName, "\\", "/")
+	fileName := stringUtils.Replace(fileInfo.RelativeFileName, "\\", "/")
 	absFileName := path.Combine(workDir, fileName)
 	dir := path.GetDirectoryName(absFileName)
 	if !directory.Exists(dir) {

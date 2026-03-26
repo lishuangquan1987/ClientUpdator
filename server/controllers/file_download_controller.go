@@ -3,6 +3,7 @@ package controllers
 import (
 	"clientupdator/server/ent"
 	"clientupdator/server/internal/service"
+	"clientupdator/server/internal/utils"
 	"clientupdator/server/models"
 	"net/http"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/utils-go/ngo/collections/generic"
 	"github.com/utils-go/ngo/io/directory"
 	"github.com/utils-go/ngo/io/file"
+	"github.com/utils-go/ngo/io/fileinfo"
 	"github.com/utils-go/ngo/io/path"
 	"github.com/utils-go/ngo/linq"
 )
@@ -43,13 +45,13 @@ func GetAllFilesByProjectId(ctx *gin.Context) {
 		return
 	}
 
-	result := generic.NewList[string]()
+	result := generic.NewList[models.FileInfo]()
 	for i := 0; i < len(files); i++ {
 		//f是全路径
 		f := files[i]
 		//获取相对路径
 		relPath, _ := path.GetRelativePath(workDir, f)
-		if linq.From[string](p.IgnoreFolders).Where(func(ignoreFolder string) bool {
+		if linq.From(p.IgnoreFolders).Where(func(ignoreFolder string) bool {
 			return path.IsSubPath(relPath, ignoreFolder)
 		}).Count() > 0 {
 			//忽略的文件夹，跳过
@@ -61,11 +63,25 @@ func GetAllFilesByProjectId(ctx *gin.Context) {
 			//忽略的文件，跳过
 			continue
 		}
-		result.Add(f)
+
+		info := fileinfo.GetFileInfo(f)
+		md5Str, err := utils.GetFileMD5(f)
+		if err != nil {
+			ctx.JSON(200, models.NGWithError(err))
+			return
+		}
+		fileInfo := models.FileInfo{
+			FileAbsolutePath: f,
+			FileRelativePath: relPath,
+			LastUpdateTime:   info.LastWriteTime,
+			FileSize:         info.Length,
+			MD5:              md5Str,
+		}
+
+		result.Add(fileInfo)
 	}
 
 	ctx.JSON(200, models.OKWithData(result.ToArray()))
-	return
 }
 
 func DownloadFile(ctx *gin.Context) {
