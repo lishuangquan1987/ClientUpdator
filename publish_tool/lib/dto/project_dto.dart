@@ -4,6 +4,7 @@ part 'project_dto.g.dart';
 
 @JsonSerializable()
 class ProjectDto {
+  final int id;
   final String name;
   final String title;
   final String? version;
@@ -13,6 +14,7 @@ class ProjectDto {
   final DateTime createAt;
   final bool? isDeleted;
   ProjectDto({
+    required this.id,
     required this.name,
     required this.title,
     required this.isForceUpdate,
