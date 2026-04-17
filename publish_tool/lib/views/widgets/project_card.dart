@@ -4,81 +4,104 @@ import 'package:publish_tool/models/project_config.dart';
 import 'package:publish_tool/viewmodels/app_controller.dart';
 import 'package:publish_tool/viewmodels/project_controller.dart';
 
-class ProjectCard extends StatelessWidget {
+class ProjectCard extends StatefulWidget {
   final ProjectConfig config;
   final int index;
-
   const ProjectCard({super.key, required this.config, required this.index});
+
+  @override
+  State<ProjectCard> createState() => _ProjectCardState();
+}
+
+class _ProjectCardState extends State<ProjectCard> {
+  bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
     final appCtrl = Get.find<AppController>();
-    final isOnline = Get.isRegistered<ProjectController>(tag: config.name)
-        ? Get.find<ProjectController>(tag: config.name).serverOsInfo.value != null
+    final isOnline = Get.isRegistered<ProjectController>(tag: widget.config.name)
+        ? Get.find<ProjectController>(tag: widget.config.name).serverOsInfo.value != null
         : false;
 
-    return GestureDetector(
-      onTap: () => appCtrl.openTab(config),
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: const Color(0xFF2d2d3f),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 8,
-              height: 8,
-              margin: const EdgeInsets.only(right: 8),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isOnline ? Colors.green : Colors.grey,
+    return Obx(() {
+      final isActive = appCtrl.openTabs.contains(widget.config) &&
+          appCtrl.activeTabIndex.value < appCtrl.openTabs.length &&
+          appCtrl.openTabs[appCtrl.activeTabIndex.value] == widget.config;
+
+      return MouseRegion(
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: () => appCtrl.openTab(widget.config),
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(8, 3, 8, 3),
+            padding: const EdgeInsets.fromLTRB(10, 8, 6, 8),
+            decoration: BoxDecoration(
+              color: isActive
+                  ? const Color(0xFF2a2a45)
+                  : _hovered
+                      ? const Color(0xFF232334)
+                      : const Color(0xFF1e1e2e),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                color: isActive ? const Color(0xFF0078d4).withOpacity(0.5) : Colors.transparent,
               ),
             ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(config.title,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 13)),
-                  if (config.exePath.isNotEmpty)
-                    Text(config.exePath.split('\\').last,
-                        style: const TextStyle(
-                            fontSize: 11, color: Color(0xFF888888)),
-                        overflow: TextOverflow.ellipsis),
-                  Text(config.serverUrl,
-                      style: const TextStyle(
-                          fontSize: 11, color: Color(0xFF5599cc)),
-                      overflow: TextOverflow.ellipsis),
-                ],
-              ),
-            ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
+            child: Row(
               children: [
-                _iconBtn(FluentIcons.chevron_up, () => appCtrl.moveUp(index)),
-                _iconBtn(
-                    FluentIcons.chevron_down, () => appCtrl.moveDown(index)),
-                _iconBtn(FluentIcons.settings, () {
-                  appCtrl.openTab(config);
-                  // settings dialog opened from project page
-                }),
-                _iconBtn(FluentIcons.delete, () => appCtrl.deleteProject(index),
-                    color: Colors.red),
+                // 状态点
+                Container(
+                  width: 6,
+                  height: 6,
+                  margin: const EdgeInsets.only(right: 8, top: 1),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isOnline ? const Color(0xFF3fa33f) : const Color(0xFF555566),
+                  ),
+                ),
+                // 信息
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        widget.config.title,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: isActive ? Colors.white : const Color(0xFFddddee),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        widget.config.serverUrl,
+                        style: const TextStyle(fontSize: 11, color: Color(0xFF5577aa)),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                // 操作按钮（hover时显示）
+                if (_hovered || isActive) ...[
+                  _iconBtn(FluentIcons.chevron_up, () => appCtrl.moveUp(widget.index)),
+                  _iconBtn(FluentIcons.chevron_down, () => appCtrl.moveDown(widget.index)),
+                  _iconBtn(FluentIcons.delete, () => appCtrl.deleteProject(widget.index),
+                      color: const Color(0xFFaa3333)),
+                ],
               ],
             ),
-          ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 
   Widget _iconBtn(IconData icon, VoidCallback onPressed, {Color? color}) {
     return IconButton(
-      icon: Icon(icon, size: 14, color: color),
+      icon: Icon(icon, size: 13, color: color ?? const Color(0xFF777788)),
       onPressed: onPressed,
     );
   }

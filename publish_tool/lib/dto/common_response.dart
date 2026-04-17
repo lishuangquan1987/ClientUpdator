@@ -51,8 +51,8 @@ class CommonResponseWithT<T> {
     this.errorMsg,
   });
 
-  static CommonResponseWithT okWithData<T>(T data) {
-    return CommonResponseWithT(data: data, isSuccess: true, errorMsg: null);
+  static CommonResponseWithT<T> okWithData<T>(T data) {
+    return CommonResponseWithT<T>(data: data, isSuccess: true, errorMsg: null);
   }
 
   static CommonResponseWithT<T> ng<T>(Error err) {

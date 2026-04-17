@@ -10,13 +10,15 @@ UpdateProjectDto _$UpdateProjectDtoFromJson(Map<String, dynamic> json) =>
     UpdateProjectDto(
       id: (json['id'] as num).toInt(),
       title: json['title'] as String,
-      isForceUpdate: json['isForceUpdate'] as bool,
-      ignoreFiles: (json['ignoreFiles'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
-      ignoreFolders: (json['ignoreFolders'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
+      isForceUpdate: json['isForceUpdate'] as bool? ?? false,
+      ignoreFiles: (json['ignoreFiles'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+      ignoreFolders: (json['ignoreFolders'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
     );
 
 Map<String, dynamic> _$UpdateProjectDtoToJson(UpdateProjectDto instance) =>

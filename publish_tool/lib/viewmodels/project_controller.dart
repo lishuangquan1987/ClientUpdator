@@ -1,22 +1,26 @@
+import 'dart:io';
+import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:path/path.dart' as p;
+import 'package:publish_tool/api/file_api.dart';
+import 'package:publish_tool/api/project_api.dart';
+import 'package:publish_tool/dto/file_info_dto.dart';
 import 'package:publish_tool/dto/project_change_log.dart';
 import 'package:publish_tool/dto/server_os_info_dto.dart';
 import 'package:publish_tool/dto/update_project_dto.dart';
 import 'package:publish_tool/models/local_file_item.dart';
 import 'package:publish_tool/models/project_config.dart';
 import 'package:publish_tool/models/upload_file_item.dart';
-import 'package:publish_tool/services/file_service.dart';
 import 'package:publish_tool/services/process_service.dart';
-import 'package:publish_tool/services/project_service.dart';
 
 class ProjectController extends GetxController {
   final ProjectConfig projectConfig;
   ProjectController(this.projectConfig);
 
-  final _projectService = Get.find<ProjectService>();
-  final _fileService = Get.find<FileService>();
+  ProjectApi get _projectApi => ProjectApi(projectConfig.serverUrl);
+  FileApi get _fileApi => FileApi(projectConfig.serverUrl);
   final _processService = Get.find<ProcessService>();
 
   CancelToken? _cancelToken;
@@ -49,21 +53,22 @@ class ProjectController extends GetxController {
   Future<void> refreshStatus() async {
     isBusy.value = true;
     statusMessage.value = '正在刷新服务器信息...';
-    try {
-      final osInfo = await _projectService.getOsInfo(
-          projectConfig.serverUrl, projectConfig.serverId);
-      serverOsInfo.value = osInfo;
 
-      final logs = await _projectService.getChangeLogs(
-          projectConfig.serverUrl, projectConfig.serverId);
-      serverChangeLogs.assignAll(logs);
-      serverVersion.value = logs.isNotEmpty ? logs.first.version : '';
+    final osRes = await _projectApi.getProjectOsInfo(projectConfig.serverId);
+    if (osRes.isSuccess) serverOsInfo.value = osRes.data;
+
+    final logsRes =
+        await _projectApi.getProjectChangeLogs(projectConfig.serverId);
+    if (logsRes.isSuccess) {
+      serverChangeLogs.assignAll(logsRes.data ?? []);
+      serverVersion.value =
+          logsRes.data?.isNotEmpty == true ? logsRes.data!.first.version : '';
       statusMessage.value = '刷新完成';
-    } catch (e) {
-      statusMessage.value = '刷新失败: $e';
-    } finally {
-      isBusy.value = false;
+    } else {
+      statusMessage.value = '刷新失败: ${logsRes.errorMsg}';
     }
+
+    isBusy.value = false;
   }
 
   Future<void> loadLocalFiles() async {
@@ -73,15 +78,14 @@ class ProjectController extends GetxController {
     }
     isBusy.value = true;
     statusMessage.value = '正在扫描本地文件...';
-    try {
-      final files = await _fileService.scanLocalFiles(projectConfig.localPath);
-      localFiles.assignAll(files);
-      statusMessage.value = '扫描完成，共 ${files.length} 个文件';
-    } catch (e) {
-      statusMessage.value = '扫描失败: $e';
-    } finally {
-      isBusy.value = false;
+    final res = await _scanLocalFiles(projectConfig.localPath);
+    if (res.isSuccess) {
+      localFiles.assignAll(res.data ?? []);
+      statusMessage.value = '扫描完成，共 ${res.data?.length ?? 0} 个文件';
+    } else {
+      statusMessage.value = '扫描失败: ${res.errorMsg}';
     }
+    isBusy.value = false;
   }
 
   Future<void> openLocalFolder() async {
@@ -126,18 +130,18 @@ class ProjectController extends GetxController {
       if (_cancelToken!.isCancelled) break;
       item.status = UploadStatus.uploading;
       uploadQueue.refresh();
-      try {
-        await _fileService.uploadFile(
-          projectConfig.serverUrl,
-          item,
-          projectConfig.name,
-          token: _cancelToken,
-        );
+      final res = await _fileApi.uploadFile(
+        item.localPath,
+        item.relativePath,
+        projectConfig.name,
+        token: _cancelToken,
+      );
+      if (res.isSuccess) {
         item.status = UploadStatus.done;
         done++;
-      } catch (e) {
+      } else {
         item.status = UploadStatus.failed;
-        statusMessage.value = '上传失败: $e';
+        statusMessage.value = '上传失败: ${res.errorMsg}';
       }
       uploadQueue.refresh();
     }
@@ -160,24 +164,27 @@ class ProjectController extends GetxController {
     isBusy.value = true;
     _cancelToken = CancelToken();
     statusMessage.value = '正在下载所有文件...';
-    try {
-      final serverFiles = await _fileService.getServerFiles(
-          projectConfig.serverUrl, projectConfig.serverId);
-      for (final f in serverFiles) {
-        if (_cancelToken!.isCancelled) break;
-        await _fileService.downloadFile(
-          projectConfig.serverUrl,
-          f,
-          projectConfig.localPath,
-          token: _cancelToken,
-        );
-      }
-      statusMessage.value = '下载完成，共 ${serverFiles.length} 个文件';
-    } catch (e) {
-      statusMessage.value = '下载失败: $e';
-    } finally {
+
+    final serverRes =
+        await _fileApi.getAllFilesByProjectId(projectConfig.serverId);
+    if (!serverRes.isSuccess) {
+      statusMessage.value = '获取服务端文件失败: ${serverRes.errorMsg}';
       isBusy.value = false;
+      return;
     }
+    final serverFiles = serverRes.data ?? [];
+    for (final f in serverFiles) {
+      if (_cancelToken!.isCancelled) break;
+      final res = await _downloadFile(f, projectConfig.localPath,
+          token: _cancelToken);
+      if (!res.isSuccess) {
+        statusMessage.value = '下载失败: ${res.errorMsg}';
+        isBusy.value = false;
+        return;
+      }
+    }
+    statusMessage.value = '下载完成，共 ${serverFiles.length} 个文件';
+    isBusy.value = false;
   }
 
   Future<void> pullAll() async {
@@ -188,27 +195,41 @@ class ProjectController extends GetxController {
     isBusy.value = true;
     _cancelToken = CancelToken();
     statusMessage.value = '正在对比文件...';
-    try {
-      final serverFiles = await _fileService.getServerFiles(
-          projectConfig.serverUrl, projectConfig.serverId);
-      final local = await _fileService.scanLocalFiles(projectConfig.localPath);
-      final diff = await _fileService.diffFiles(local, serverFiles);
-      statusMessage.value = '需要下载 ${diff.length} 个文件';
-      for (final f in diff) {
-        if (_cancelToken!.isCancelled) break;
-        await _fileService.downloadFile(
-          projectConfig.serverUrl,
-          f,
-          projectConfig.localPath,
-          token: _cancelToken,
-        );
-      }
-      statusMessage.value = '拉取完成，更新 ${diff.length} 个文件';
-    } catch (e) {
-      statusMessage.value = '拉取失败: $e';
-    } finally {
+
+    final serverRes =
+        await _fileApi.getAllFilesByProjectId(projectConfig.serverId);
+    if (!serverRes.isSuccess) {
+      statusMessage.value = '获取服务端文件失败: ${serverRes.errorMsg}';
       isBusy.value = false;
+      return;
     }
+    final localRes = await _scanLocalFiles(projectConfig.localPath);
+    if (!localRes.isSuccess) {
+      statusMessage.value = '扫描本地文件失败: ${localRes.errorMsg}';
+      isBusy.value = false;
+      return;
+    }
+    final diffRes =
+        await _diffFiles(localRes.data ?? [], serverRes.data ?? []);
+    if (!diffRes.isSuccess) {
+      statusMessage.value = '对比失败: ${diffRes.errorMsg}';
+      isBusy.value = false;
+      return;
+    }
+    final diff = diffRes.data ?? [];
+    statusMessage.value = '需要下载 ${diff.length} 个文件';
+    for (final f in diff) {
+      if (_cancelToken!.isCancelled) break;
+      final res = await _downloadFile(f, projectConfig.localPath,
+          token: _cancelToken);
+      if (!res.isSuccess) {
+        statusMessage.value = '下载失败: ${res.errorMsg}';
+        isBusy.value = false;
+        return;
+      }
+    }
+    statusMessage.value = '拉取完成，更新 ${diff.length} 个文件';
+    isBusy.value = false;
   }
 
   Future<void> refreshFiles() async {
@@ -225,17 +246,12 @@ class ProjectController extends GetxController {
       return;
     }
     await _uploadQueue();
-    // TODO: submit version log via API when endpoint is available
     statusMessage.value = '推送更新完成，版本: ${newVersion.value}';
   }
 
-  Future<void> openProjectSettings() async {
-    // Triggered from view layer via dialog
-  }
+  Future<void> openProjectSettings() async {}
 
-  Future<void> openConfigEditor() async {
-    // Triggered from view layer via dialog
-  }
+  Future<void> openConfigEditor() async {}
 
   Future<void> buildProject() async {
     statusMessage.value = '正在打包...';
@@ -269,9 +285,7 @@ class ProjectController extends GetxController {
         args: args.split(' ').where((s) => s.isNotEmpty).toList());
   }
 
-  Future<void> previewLogs() async {
-    // open log file if exists
-  }
+  Future<void> previewLogs() async {}
 
   Future<void> openExplorer() async {
     await openLocalFolder();
@@ -282,18 +296,93 @@ class ProjectController extends GetxController {
     projectConfig.title = title;
     projectConfig.exePath = exePath;
     projectConfig.localPath = localPath;
+    final dto = UpdateProjectDto(
+      id: projectConfig.serverId,
+      title: title,
+      isForceUpdate: false,
+      ignoreFolders: [],
+      ignoreFiles: [],
+    );
+    final res = await _projectApi.updateProject(dto);
+    statusMessage.value = res.isSuccess ? '设置已保存' : '保存失败: ${res.errorMsg}';
+  }
+
+  // ── 本地文件工具方法 ──────────────────────────────────────────
+
+  Future<_LocalResult<List<LocalFileItem>>> _scanLocalFiles(
+      String localPath) async {
     try {
-      final dto = UpdateProjectDto(
-        id: projectConfig.serverId,
-        title: title,
-        isForceUpdate: false,
-        ignoreFolders: [],
-        ignoreFiles: [],
-      );
-      await _projectService.updateProject(projectConfig.serverUrl, dto);
-      statusMessage.value = '设置已保存';
+      final dir = Directory(localPath);
+      if (!await dir.exists()) return _LocalResult.ok([]);
+      final items = <LocalFileItem>[];
+      await for (final entity
+          in dir.list(recursive: true, followLinks: false)) {
+        if (entity is File) {
+          final stat = await entity.stat();
+          final relativePath =
+              p.relative(entity.path, from: localPath).replaceAll('\\', '/');
+          items.add(LocalFileItem(
+            fileName: p.basename(entity.path),
+            absolutePath: entity.path,
+            relativePath: relativePath,
+            lastModified: stat.modified,
+          ));
+        }
+      }
+      return _LocalResult.ok(items);
     } catch (e) {
-      statusMessage.value = '保存失败: $e';
+      return _LocalResult.err(e.toString());
     }
   }
+
+  Future<_LocalResult<List<FileInfoDto>>> _diffFiles(
+      List<LocalFileItem> local, List<FileInfoDto> server) async {
+    try {
+      final localMd5Map = <String, String>{};
+      for (final item in local) {
+        final bytes = await File(item.absolutePath).readAsBytes();
+        localMd5Map[item.relativePath] = md5.convert(bytes).toString();
+      }
+      final diff = server.where((s) {
+        final localHash = localMd5Map[s.fileRelativePath];
+        return localHash == null || localHash != s.md5;
+      }).toList();
+      return _LocalResult.ok(diff);
+    } catch (e) {
+      return _LocalResult.err(e.toString());
+    }
+  }
+
+  Future<_LocalResult<void>> _downloadFile(
+    FileInfoDto serverFile,
+    String localBasePath, {
+    Function(int, int)? progress,
+    CancelToken? token,
+  }) async {
+    try {
+      final savePath = p.join(localBasePath,
+          serverFile.fileRelativePath.replaceAll('/', p.separator));
+      await File(savePath).parent.create(recursive: true);
+      final res = await _fileApi.downloadFile(
+        serverFile.fileAbsolutePath,
+        savePath,
+        progress: progress,
+        token: token,
+      );
+      return res.isSuccess
+          ? _LocalResult.ok(null)
+          : _LocalResult.err(res.errorMsg ?? '');
+    } catch (e) {
+      return _LocalResult.err(e.toString());
+    }
+  }
+}
+
+class _LocalResult<T> {
+  final bool isSuccess;
+  final T? data;
+  final String? errorMsg;
+  _LocalResult._(this.isSuccess, this.data, this.errorMsg);
+  factory _LocalResult.ok(T data) => _LocalResult._(true, data, null);
+  factory _LocalResult.err(String msg) => _LocalResult._(false, null, msg);
 }

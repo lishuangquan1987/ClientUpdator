@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/widgets.dart';
 import 'package:publish_tool/dto/common_response.dart';
 import 'package:publish_tool/logger/log_helper.dart';
 
@@ -7,11 +6,12 @@ class BaseApi {
   late Dio _dio;
   String baseUrl = "";
   BaseApi(this.baseUrl) {
+    if (!baseUrl.endsWith('/')) baseUrl += '/';
     _dio = Dio(
       BaseOptions(
         baseUrl: baseUrl,
-        connectTimeout: Duration(seconds: 10),
-        receiveTimeout: Duration(seconds: 500),
+        connectTimeout: const Duration(seconds: 5),
+        receiveTimeout: const Duration(seconds: 30),
       ),
     );
     _dio.interceptors.add(
@@ -32,13 +32,26 @@ class BaseApi {
     );
   }
 
+  Map<String, dynamic> _toMap(dynamic data) {
+    if (data is Map<String, dynamic>) return data;
+    throw Exception('服务端返回非JSON数据: $data');
+  }
+
+  /// 将 dto 转为 dio 可识别的 Map，dto 需实现 toJson()
+  dynamic _toBody(Object data) {
+    if (data is Map<String, dynamic> || data is String || data is FormData) {
+      return data;
+    }
+    // 调用 dto 的 toJson()
+    return (data as dynamic).toJson() as Map<String, dynamic>;
+  }
+
   Future<CommonResponse> doPost(String url, Object data) async {
     try {
-      final response = await _dio.post(url, data: data);
-      var result = CommonResponse.fromJson(response.data);
-      return result;
-    } on Error catch (e) {
-      return CommonResponse.ng(e);
+      final response = await _dio.post(url, data: _toBody(data));
+      return CommonResponse.fromJson(_toMap(response.data));
+    } catch (e) {
+      return CommonResponse.ngWithMsg(e.toString());
     }
   }
 
@@ -48,11 +61,10 @@ class BaseApi {
     T Function(Object? value) fromJson,
   ) async {
     try {
-      final response = await _dio.post(url, data: data);
-      var result = CommonResponseWithT.fromJson(response.data, fromJson);
-      return result;
-    } on Error catch (e) {
-      return CommonResponseWithT.ng(e);
+      final response = await _dio.post(url, data: _toBody(data));
+      return CommonResponseWithT.fromJson(_toMap(response.data), fromJson);
+    } catch (e) {
+      return CommonResponseWithT.ngWithMsg(e.toString());
     }
   }
 
@@ -62,10 +74,9 @@ class BaseApi {
   ) async {
     try {
       final response = await _dio.get(url);
-      var result = CommonResponseWithT.fromJson(response.data, fromJson);
-      return result;
-    } on Error catch (e) {
-      return CommonResponseWithT.ng(e);
+      return CommonResponseWithT.fromJson(_toMap(response.data), fromJson);
+    } catch (e) {
+      return CommonResponseWithT.ngWithMsg(e.toString());
     }
   }
 
@@ -91,9 +102,9 @@ class BaseApi {
         onSendProgress: progress,
         cancelToken: token,
       );
-      return CommonResponse.fromJson(response.data);
-    } on Error catch (e) {
-      return CommonResponse.ng(e);
+      return CommonResponse.fromJson(_toMap(response.data));
+    } catch (e) {
+      return CommonResponse.ngWithMsg(e.toString());
     }
   }
 
@@ -111,8 +122,8 @@ class BaseApi {
         cancelToken: token,
       );
       return CommonResponse.ok();
-    } on Error catch (e) {
-      return CommonResponse.ng(e);
+    } catch (e) {
+      return CommonResponse.ngWithMsg(e.toString());
     }
   }
 }

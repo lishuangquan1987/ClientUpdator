@@ -1,12 +1,13 @@
 import 'package:get/get.dart';
+import 'package:publish_tool/api/project_api.dart';
+import 'package:publish_tool/dto/common_response.dart';
 import 'package:publish_tool/dto/create_project_dto.dart';
+import 'package:publish_tool/dto/project_dto.dart';
 import 'package:publish_tool/models/project_config.dart';
 import 'package:publish_tool/services/config_service.dart';
-import 'package:publish_tool/services/project_service.dart';
 
 class AppController extends GetxController {
   final _configService = Get.find<ConfigService>();
-  final _projectService = Get.find<ProjectService>();
 
   final projectConfigs = <ProjectConfig>[].obs;
   final filterKeyword = ''.obs;
@@ -36,29 +37,21 @@ class AppController extends GetxController {
     await _configService.saveConfigs(projectConfigs);
   }
 
-  Future<void> addProject(ProjectConfig config) async {
-    try {
-      final dto = CreateProjectDto(
-        name: config.name,
-        title: config.title,
-        isForceUpdate: false,
-        ignoreFolders: [],
-        ignoreFiles: [],
-      );
-      final created = await _projectService.createProject(config.serverUrl, dto);
-      config.serverId = created.id;
-      config.sortOrder = projectConfigs.length;
-      projectConfigs.add(config);
-      await saveConfig();
-    } catch (e) {
-      rethrow;
-    }
+  /// 服务端项目：只在服务端创建，不保存本地配置
+  Future<CommonResponseWithT<ProjectDto>> createServerProject(
+          String serverUrl, CreateProjectDto dto) =>
+      ProjectApi(serverUrl).createProject(dto);
+
+  /// 客户端项目：不调用服务端，直接保存本地配置
+  Future<void> addLocalProject(ProjectConfig config) async {
+    config.sortOrder = projectConfigs.length;
+    projectConfigs.add(config);
+    await saveConfig();
   }
 
   Future<void> deleteProject(int index) async {
     if (index < 0 || index >= projectConfigs.length) return;
     final config = projectConfigs[index];
-    // close tab if open
     final tabIdx = openTabs.indexWhere((t) => t.name == config.name);
     if (tabIdx >= 0) closeTab(tabIdx);
     projectConfigs.removeAt(index);

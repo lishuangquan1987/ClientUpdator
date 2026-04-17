@@ -14,55 +14,58 @@ class ToolbarBar extends StatelessWidget {
     return Obx(() {
       final busy = ctrl.isBusy.value;
       return Container(
-        height: 44,
-        color: const Color(0xFF1e1e2e),
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+        height: 40,
+        decoration: const BoxDecoration(
+          color: Color(0xFF1e1e2e),
+          border: Border(bottom: BorderSide(color: Color(0xFF2a2a3e))),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 6),
         child: Row(
           children: [
-            _btn('刷新状态', FluentIcons.refresh, busy ? null : ctrl.refreshStatus),
-            _btn('项目设置', FluentIcons.settings, () => _showSettings(context, ctrl)),
-            _btn('配置项编辑', FluentIcons.edit, () => _showConfigEditor(context, ctrl)),
-            _btn('打包项目', FluentIcons.build_definition, busy ? null : ctrl.buildProject),
-            _btn('默认启动', FluentIcons.play, ctrl.defaultLaunch),
-            _btn('自定义启动', FluentIcons.play_resume_media, () => _customLaunch(context, ctrl)),
-            _btn('日志预览', FluentIcons.document, ctrl.previewLogs),
-            _btn('资源管理器', FluentIcons.folder_open, ctrl.openExplorer),
+            _btn(FluentIcons.refresh, '刷新状态', busy ? null : ctrl.refreshStatus),
+            _divider(),
+            _btn(FluentIcons.settings, '项目设置', () => _showSettings(context, ctrl)),
+            _btn(FluentIcons.edit, '配置项', () => _showConfigEditor(context, ctrl)),
+            _divider(),
+            _btn(FluentIcons.build_definition, '打包', busy ? null : ctrl.buildProject),
+            _btn(FluentIcons.play, '启动', ctrl.defaultLaunch),
+            _btn(FluentIcons.play_resume, '自定义启动', () => _customLaunch(context, ctrl)),
+            _divider(),
+            _btn(FluentIcons.document, '日志', ctrl.previewLogs),
+            _btn(FluentIcons.folder_open, '资源管理器', ctrl.openExplorer),
           ],
         ),
       );
     });
   }
 
-  Widget _btn(String label, IconData icon, VoidCallback? onPressed) {
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 2),
-        child: Button(
+  Widget _btn(IconData icon, String tooltip, VoidCallback? onPressed) {
+    return Tooltip(
+      message: tooltip,
+      child: SizedBox(
+        width: 36,
+        height: 32,
+        child: IconButton(
+          icon: Icon(icon, size: 15),
           onPressed: onPressed,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 14),
-              Text(label, style: const TextStyle(fontSize: 10)),
-            ],
-          ),
         ),
       ),
     );
   }
 
+  Widget _divider() => Container(
+        width: 1,
+        height: 20,
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        color: const Color(0xFF333344),
+      );
+
   void _showSettings(BuildContext context, ProjectController ctrl) {
-    showDialog(
-      context: context,
-      builder: (_) => ProjectSettingsDialog(tag: tag),
-    );
+    showDialog(context: context, builder: (_) => ProjectSettingsDialog(tag: tag));
   }
 
   void _showConfigEditor(BuildContext context, ProjectController ctrl) {
-    showDialog(
-      context: context,
-      builder: (_) => ConfigEditorDialog(tag: tag),
-    );
+    showDialog(context: context, builder: (_) => ConfigEditorDialog(tag: tag));
   }
 
   void _customLaunch(BuildContext context, ProjectController ctrl) {
@@ -76,17 +79,14 @@ class ToolbarBar extends StatelessWidget {
           placeholder: '输入启动参数（空格分隔）',
         ),
         actions: [
-          Button(
+          FilledButton(
             onPressed: () {
               Navigator.pop(context);
               ctrl.customLaunch(argsCtrl.text);
             },
             child: const Text('启动'),
           ),
-          Button(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
-          ),
+          Button(onPressed: () => Navigator.pop(context), child: const Text('取消')),
         ],
       ),
     );

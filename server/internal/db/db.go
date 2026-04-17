@@ -53,7 +53,6 @@ func InitDB() {
 	// Create a custom ent driver with sqlite3 dialect
 	driver := sqldialect.OpenDB("sqlite3", db)
 	Client = ent.NewClient(ent.Driver(driver))
-	defer Client.Close()
 	// Run the auto migration tool.
 	if err := Client.Schema.Create(context.Background()); err != nil {
 		log.Fatalf("failed creating schema resources: %v", err)

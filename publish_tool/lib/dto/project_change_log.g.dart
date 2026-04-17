@@ -8,11 +8,16 @@ part of 'project_change_log.dart';
 
 ProjectChangeLog _$ProjectChangeLogFromJson(Map<String, dynamic> json) =>
     ProjectChangeLog(
-      version: json['version'] as String,
-      logs: (json['logs'] as List<dynamic>).map((e) => e as String).toList(),
-      time: json['time'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      isDeleted: json['isDeleted'] as bool,
+      version: json['version'] as String? ?? '',
+      logs: (json['logs'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+      time: json['time'] as String? ?? '',
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : DateTime.now(),
+      isDeleted: json['is_deleted'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$ProjectChangeLogToJson(ProjectChangeLog instance) =>
@@ -20,6 +25,6 @@ Map<String, dynamic> _$ProjectChangeLogToJson(ProjectChangeLog instance) =>
       'version': instance.version,
       'logs': instance.logs,
       'time': instance.time,
-      'createdAt': instance.createdAt.toIso8601String(),
-      'isDeleted': instance.isDeleted,
+      'created_at': instance.createdAt.toIso8601String(),
+      'is_deleted': instance.isDeleted,
     };

@@ -10,47 +10,61 @@ class BottomActionBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final ctrl = Get.find<ProjectController>(tag: tag);
     return Obx(() => Container(
-          height: 40,
-          color: const Color(0xFF16213e),
+          height: 44,
+          decoration: const BoxDecoration(
+            color: Color(0xFF1a1a2a),
+            border: Border(top: BorderSide(color: Color(0xFF2a2a3e))),
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Row(
             children: [
               // 状态消息
+              const Icon(FluentIcons.info, size: 12, color: Color(0xFF555566)),
+              const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   ctrl.statusMessage.value,
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF888888)),
+                  style: const TextStyle(fontSize: 11, color: Color(0xFF777788)),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              // 附加到最新版本号
+              // 选项
               Checkbox(
                 checked: ctrl.appendToLatest.value,
                 onChanged: (v) => ctrl.appendToLatest.value = v ?? false,
-                content: Text(
-                  '附加到最新版本号: ${ctrl.serverVersion.value}',
-                  style: const TextStyle(fontSize: 11),
-                ),
+                content: Obx(() => Text(
+                      '附加到最新版本号: ${ctrl.serverVersion.value}',
+                      style: const TextStyle(fontSize: 11),
+                    )),
               ),
               const SizedBox(width: 12),
-              // 推送成功自动刷新
               Checkbox(
                 checked: ctrl.autoRefreshAfterPush.value,
-                onChanged: (v) =>
-                    ctrl.autoRefreshAfterPush.value = v ?? true,
-                content: const Text('推送成功自动刷新状态',
-                    style: TextStyle(fontSize: 11)),
+                onChanged: (v) => ctrl.autoRefreshAfterPush.value = v ?? true,
+                content: const Text('推送成功自动刷新状态', style: TextStyle(fontSize: 11)),
               ),
               const SizedBox(width: 12),
-              // 推送更新按钮
+              // 推送按钮
               FilledButton(
                 onPressed: ctrl.isBusy.value ? null : ctrl.pushUpdate,
-                child: const Row(
+                style: ButtonStyle(
+                  padding: WidgetStateProperty.all(
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  ),
+                ),
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(FluentIcons.upload, size: 14),
-                    SizedBox(width: 4),
-                    Text('推送更新'),
+                    if (ctrl.isBusy.value)
+                      const SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: ProgressRing(strokeWidth: 2),
+                      )
+                    else
+                      const Icon(FluentIcons.upload, size: 13),
+                    const SizedBox(width: 6),
+                    const Text('推送更新', style: TextStyle(fontSize: 12)),
                   ],
                 ),
               ),

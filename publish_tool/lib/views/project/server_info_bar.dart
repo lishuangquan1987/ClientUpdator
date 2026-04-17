@@ -22,7 +22,7 @@ class ServerInfoBar extends StatelessWidget {
           ),
         );
       }
-      final usedPercent = double.tryParse(info.diskUsedPercent) ?? 0;
+      final usedPercent = info.diskUsedPercent;
       return Container(
         color: const Color(0xFF16213e),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -48,7 +48,7 @@ class ServerInfoBar extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '${info.diskUsed}G / ${info.diskFree}G / ${info.diskTotal}G',
+                        '${info.diskUsed.toStringAsFixed(1)}G / ${info.diskFree.toStringAsFixed(1)}G / ${info.diskTotal.toStringAsFixed(1)}G',
                         style: const TextStyle(fontSize: 11),
                       ),
                     ],

@@ -19,7 +19,7 @@ class FileApi extends BaseApi {
     return doUploadFile(
       url,
       absoluteFilePath,
-      {"projectName": projectName, "relativeFilePath": relativeFilePath},
+      {"projectName": projectName, "relativeFileName": relativeFilePath},
       progress,
       token,
     );

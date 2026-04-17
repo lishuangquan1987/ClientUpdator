@@ -9,12 +9,13 @@ class ProjectTabBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final ctrl = Get.find<AppController>();
     return Obx(() {
-      if (ctrl.openTabs.isEmpty) {
-        return const SizedBox(height: 36);
-      }
+      if (ctrl.openTabs.isEmpty) return const SizedBox.shrink();
       return Container(
-        height: 36,
-        color: const Color(0xFF16213e),
+        height: 34,
+        decoration: const BoxDecoration(
+          color: Color(0xFF1a1a2a),
+          border: Border(bottom: BorderSide(color: Color(0xFF2a2a3e))),
+        ),
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           itemCount: ctrl.openTabs.length,
@@ -23,32 +24,38 @@ class ProjectTabBar extends StatelessWidget {
             return GestureDetector(
               onTap: () => ctrl.activeTabIndex.value = i,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                constraints: const BoxConstraints(minWidth: 80, maxWidth: 180),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
-                  color: isActive
-                      ? const Color(0xFF2d2d3f)
-                      : const Color(0xFF16213e),
+                  color: isActive ? const Color(0xFF232336) : Colors.transparent,
                   border: isActive
-                      ? const Border(
-                          bottom: BorderSide(color: Color(0xFF0078d4), width: 2))
+                      ? const Border(top: BorderSide(color: Color(0xFF0078d4), width: 2))
                       : null,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      ctrl.openTabs[i].title,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: isActive ? Colors.white : const Color(0xFF888888),
+                    Flexible(
+                      child: Text(
+                        ctrl.openTabs[i].title,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isActive ? Colors.white : const Color(0xFF777788),
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () => ctrl.closeTab(i),
-                      child: const Icon(FluentIcons.chrome_close,
-                          size: 10, color: Color(0xFF888888)),
+                    const SizedBox(width: 6),
+                    MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        onTap: () => ctrl.closeTab(i),
+                        child: Icon(
+                          FluentIcons.chrome_close,
+                          size: 9,
+                          color: isActive ? const Color(0xFF888899) : const Color(0xFF555566),
+                        ),
+                      ),
                     ),
                   ],
                 ),

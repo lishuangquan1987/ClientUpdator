@@ -14,11 +14,11 @@ ServerOsInfoDto _$ServerOsInfoDtoFromJson(Map<String, dynamic> json) =>
       json['version'] as String,
       (json['numCPU'] as num).toInt(),
       json['cpuName'] as String,
-      json['cpuMhz'] as String,
-      json['diskUsed'] as String,
-      json['diskFree'] as String,
-      json['diskTotal'] as String,
-      json['diskUsedPercent'] as String,
+      (json['cpuMhz'] as num).toDouble(),
+      (json['diskUsed'] as num).toDouble(),
+      (json['diskFree'] as num).toDouble(),
+      (json['diskTotal'] as num).toDouble(),
+      (json['diskUsedPercent'] as num).toDouble(),
     );
 
 Map<String, dynamic> _$ServerOsInfoDtoToJson(ServerOsInfoDto instance) =>

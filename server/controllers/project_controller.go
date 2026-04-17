@@ -20,9 +20,9 @@ func CreateProject(ctx *gin.Context) {
 	var createProjectDto struct {
 		Name          string   `json:"name"`
 		Title         string   `json:"title"`
-		IsForceUpdate bool     `json:"is_force_update"`
-		IgnoreFolders []string `json:"ignore_folders"`
-		IgnoreFiles   []string `json:"ignore_files"`
+		IsForceUpdate bool     `json:"isForceUpdate"`
+		IgnoreFolders []string `json:"ignoreFolders"`
+		IgnoreFiles   []string `json:"ignoreFiles"`
 	}
 	// 解析请求体
 	if err := ctx.ShouldBindJSON(&createProjectDto); err != nil {
@@ -37,7 +37,7 @@ func CreateProject(ctx *gin.Context) {
 	}
 
 	if createProjectDto.Title == "" {
-		ctx.JSON(200, "项目抬头不能为空")
+		ctx.JSON(200, models.NG("项目抬头不能为空"))
 		return
 	}
 
@@ -77,9 +77,9 @@ func UpdateProject(ctx *gin.Context) {
 	var updateProjectDto struct {
 		ID            int      `json:"id"`
 		Title         string   `json:"title"`
-		IsForceUpdate bool     `json:"is_force_update"`
-		IgnoreFolders []string `json:"ignore_folders"`
-		IgnoreFiles   []string `json:"ignore_files"`
+		IsForceUpdate bool     `json:"isForceUpdate"`
+		IgnoreFolders []string `json:"ignoreFolders"`
+		IgnoreFiles   []string `json:"ignoreFiles"`
 	}
 	if err := ctx.ShouldBindJSON(&updateProjectDto); err != nil {
 		ctx.JSON(200, models.NGWithError(err))
@@ -198,3 +198,5 @@ func GetProjectOSInfo(ctx *gin.Context) {
 		Data:      serverOSInfo,
 	})
 }
+
+

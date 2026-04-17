@@ -10,13 +10,15 @@ CreateProjectDto _$CreateProjectDtoFromJson(Map<String, dynamic> json) =>
     CreateProjectDto(
       name: json['name'] as String,
       title: json['title'] as String,
-      isForceUpdate: json['isForceUpdate'] as bool,
-      ignoreFolders: (json['ignoreFolders'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
-      ignoreFiles: (json['ignoreFiles'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
+      isForceUpdate: json['isForceUpdate'] as bool? ?? false,
+      ignoreFolders: (json['ignoreFolders'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+      ignoreFiles: (json['ignoreFiles'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
     );
 
 Map<String, dynamic> _$CreateProjectDtoToJson(CreateProjectDto instance) =>
