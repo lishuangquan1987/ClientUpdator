@@ -282,11 +282,11 @@ public partial class ProjectTabViewModel : ObservableObject, IDisposable
         if (IsBusy) return;
         var toUnstage = StagedFiles.Where(f => f.IsSelected).Select(f => f.RelativePath).ToList();
         if (toUnstage.Count == 0) { await MessageBox.ShowAsync("请先勾选文件", "提示", MessageBoxIcon.Warning); return; }
-        var keepStaged = StagedFiles.Where(f => !f.IsSelected).Select(f => f.RelativePath).ToList();
         IsBusy = true;
         try
         {
-            var resetResult = await _cli.ResetAllAsync(Project.ProjectPath);
+            // 只移除勾选的文件：旧实现 reset --all 后重加剩余文件，中途失败会丢全部暂存
+            var resetResult = await _cli.ResetFilesAsync(Project.ProjectPath, toUnstage);
             if (resetResult?.IsSuccess != true)
             {
                 var errMsg = resetResult?.ErrorMsg ?? "未知错误";
@@ -294,23 +294,7 @@ public partial class ProjectTabViewModel : ObservableObject, IDisposable
                 StatusMessage = $"取消暂存失败: {errMsg}";
                 return;
             }
-            if (keepStaged.Count > 0)
-            {
-                var addResult = await _cli.AddFilesAsync(Project.ProjectPath, keepStaged);
-                if (addResult?.IsSuccess == true)
-                {
-                    StatusMessage = $"已取消暂存 {toUnstage.Count} 个文件";
-                }
-                else
-                {
-                    await MessageBox.ShowAsync($"部分文件暂存失败: {addResult?.ErrorMsg ?? "未知错误"}", "错误", MessageBoxIcon.Error);
-                    StatusMessage = $"部分文件暂存失败: {addResult?.ErrorMsg ?? "未知错误"}";
-                }
-            }
-            else
-            {
-                StatusMessage = $"已取消暂存 {toUnstage.Count} 个文件";
-            }
+            StatusMessage = $"已取消暂存 {toUnstage.Count} 个文件";
         }
         catch (Exception ex)
         {

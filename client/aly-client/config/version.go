@@ -65,8 +65,15 @@ func WriteVersion(info *VersionInfo) error {
 		return fmt.Errorf("序列化 version.json 失败: %v", err)
 	}
 
-	if err := ioutil.WriteFile(path, data, 0644); err != nil {
+	// 原子写：先写临时文件再 rename，崩溃/断电不会留下半截损坏的 version.json
+	// （旧实现直接截断式写入，中途崩溃会丢失全部版本状态，check/apply/rollback 全失效）。
+	tmpPath := path + ".tmp"
+	if err := ioutil.WriteFile(tmpPath, data, 0644); err != nil {
 		return fmt.Errorf("写入 version.json 失败: %v", err)
+	}
+	if err := os.Rename(tmpPath, path); err != nil {
+		os.Remove(tmpPath)
+		return fmt.Errorf("原子替换 version.json 失败: %v", err)
 	}
 
 	return nil

@@ -42,3 +42,4 @@ package-lock.json
 client/aly-client-sdk/AlyClient.CSharpSDK/AlyClient.CSharpSDK/bin/
 client/aly-client-sdk/AlyClient.CSharpSDK/AlyClient.CSharpSDK/bin/
 client/aly-client/.idea/
+client/aly-client-sdk/AlyClient.CSharpSDK/AlyClient.CSharpSDK/obj/

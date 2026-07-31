@@ -16,10 +16,18 @@ import (
 	"github.com/utils-go/ngo/stringUtils"
 )
 
+// maxUploadFileSize 单文件上传大小上限（1GB），防止恶意/异常上传填满磁盘
+const maxUploadFileSize int64 = 1 << 30
+
 func UploadFile(ctx *gin.Context) {
 	f, err := ctx.FormFile("file")
 	if err != nil {
 		ctx.JSON(200, models.NGWithError(err))
+		return
+	}
+	// 上传大小限制：multipart 解析时即校验，避免大文件先落盘再拒绝
+	if f.Size > maxUploadFileSize {
+		ctx.JSON(200, models.NG(fmt.Sprintf("文件过大: %d 字节，上限 %d 字节", f.Size, maxUploadFileSize)))
 		return
 	}
 
@@ -107,6 +115,11 @@ func UploadChunk(ctx *gin.Context) {
 	f, err := ctx.FormFile("file")
 	if err != nil {
 		ctx.JSON(200, models.NGWithError(err))
+		return
+	}
+	// 分片大小同样受限
+	if f.Size > maxUploadFileSize {
+		ctx.JSON(200, models.NG(fmt.Sprintf("分片过大: %d 字节，上限 %d 字节", f.Size, maxUploadFileSize)))
 		return
 	}
 
@@ -207,6 +220,11 @@ func UploadChunkComplete(ctx *gin.Context) {
 		}))
 		return
 	}
+	// 累计大小校验
+	if totalSize > maxUploadFileSize {
+		ctx.JSON(200, models.NG(fmt.Sprintf("文件过大: %d 字节，上限 %d 字节", totalSize, maxUploadFileSize)))
+		return
+	}
 
 	// 确保目标目录存在
 	destDir := path.GetDirectoryName(absFileName)
@@ -217,27 +235,43 @@ func UploadChunkComplete(ctx *gin.Context) {
 		}
 	}
 
-	// 合并分片到最终文件
-	destFile, err := os.Create(absFileName)
+	// 合并分片到临时文件，成功后原子 rename。
+	// 旧实现先 os.Create 截断目标：复制中途失败留下半截文件，并发下载会读到损坏数据。
+	mergePath := absFileName + ".merging"
+	destFile, err := os.Create(mergePath)
 	if err != nil {
 		ctx.JSON(200, models.NG(fmt.Sprintf("create dest file error: %v", err)))
 		return
 	}
-	defer destFile.Close()
 
 	for i := 0; i < info.TotalChunks; i++ {
 		chunkPath := filepath.Join(chunksDir, strconv.Itoa(i))
 		chunkFile, err := os.Open(chunkPath)
 		if err != nil {
+			destFile.Close()
+			os.Remove(mergePath)
 			ctx.JSON(200, models.NG(fmt.Sprintf("open chunk %d error: %v", i, err)))
 			return
 		}
 		if _, err := io.Copy(destFile, chunkFile); err != nil {
 			chunkFile.Close()
+			destFile.Close()
+			os.Remove(mergePath)
 			ctx.JSON(200, models.NG(fmt.Sprintf("copy chunk %d error: %v", i, err)))
 			return
 		}
 		chunkFile.Close()
+	}
+	closeErr := destFile.Close()
+	if closeErr != nil {
+		os.Remove(mergePath)
+		ctx.JSON(200, models.NG(fmt.Sprintf("close merged file error: %v", closeErr)))
+		return
+	}
+	if err := os.Rename(mergePath, absFileName); err != nil {
+		os.Remove(mergePath)
+		ctx.JSON(200, models.NG(fmt.Sprintf("atomic rename merged file error: %v", err)))
+		return
 	}
 
 	// 清理分片目录

@@ -48,7 +48,32 @@ func ApplyUpdate() {
 	case config.VersionStatusApplying:
 		// Crash recovery
 		if _, statErr := os.Stat(fc.MainFolder); statErr == nil {
-			// Main folder exists and is complete -> redo replacement steps (fall through)
+			// Main folder exists —— 需要区分两种情况：
+			//   1. versionDir 已不存在：说明 versionDir→mainFolder 重命名已完成，
+			//      新版本已就位，只差写 applied 状态。此时绝不能再跑替换流程——
+			//      重跑会把"上一版本"备份（prevVersionDir）连同旧备份一起删掉，
+			//      回滚永久失效。
+			//   2. versionDir 仍存在：崩溃发生在复制/重命名之前，mainFolder 还是旧版本，
+			//      走正常替换流程（fall through）。
+			versionDir, verDirErr := fc.ExeCfg.AppVersionDir(versionInfo.Version)
+			if verDirErr != nil {
+				printOutput(false, verDirErr.Error(), nil)
+				return
+			}
+			if _, statErr2 := os.Stat(versionDir); os.IsNotExist(statErr2) {
+				// 新版本已应用完成：补齐状态、执行后置脚本、启动主程序。
+				versionInfo.VersionStatus = config.VersionStatusApplied
+				if wErr := config.WriteVersion(versionInfo); wErr != nil {
+					util.AppendToLog(logDir(), "update.log", fmt.Sprintf("crash recovery: write version failed: %v", wErr))
+				}
+				if versionInfo.AfterApplyUpdateScript != "" {
+					runScript(filepath.Join(fc.MainFolder, versionInfo.AfterApplyUpdateScript))
+				}
+				launchMainExe(fc.ExeCfg)
+				printOutput(true, "", nil)
+				return
+			}
+			// versionDir 存在：崩溃发生在替换前，重做替换步骤（fall through）
 		} else {
 			// Main folder doesn't exist, check if version dir exists
 			versionDir, verDirErr := fc.ExeCfg.AppVersionDir(versionInfo.Version)

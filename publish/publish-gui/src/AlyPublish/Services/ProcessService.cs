@@ -19,11 +19,23 @@ public class ProcessService
 {
     public async Task<ProcessResult> RunAsync(
         string fileName, string arguments, string? workingDir = null, int timeoutMs = 30000)
+        => await RunCoreAsync(fileName, arguments, null, workingDir, timeoutMs);
+
+    /// <summary>
+    /// 使用 ArgumentList 启动进程：参数数组由 .NET 按 Windows 规则自动转义，
+    /// 杜绝手工拼接引号导致的参数注入。
+    /// </summary>
+    public async Task<ProcessResult> RunAsync(
+        string fileName, IReadOnlyList<string> argumentList, string? workingDir = null, int timeoutMs = 30000)
+        => await RunCoreAsync(fileName, null, argumentList, workingDir, timeoutMs);
+
+    private async Task<ProcessResult> RunCoreAsync(
+        string fileName, string? arguments, IReadOnlyList<string>? argumentList,
+        string? workingDir, int timeoutMs)
     {
         var psi = new ProcessStartInfo
         {
             FileName = fileName,
-            Arguments = arguments,
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -31,6 +43,15 @@ public class ProcessService
             StandardOutputEncoding = Encoding.UTF8,
             StandardErrorEncoding = Encoding.UTF8
         };
+        if (argumentList is not null)
+        {
+            foreach (var arg in argumentList)
+                psi.ArgumentList.Add(arg);
+        }
+        else
+        {
+            psi.Arguments = arguments ?? string.Empty;
+        }
         if (!string.IsNullOrWhiteSpace(workingDir))
         {
             psi.WorkingDirectory = workingDir;
@@ -56,7 +77,8 @@ public class ProcessService
             }
             catch (OperationCanceledException)
             {
-                proc.Kill();
+                // Kill(true)：同时结束 CLI 子进程树，避免孤儿进程占用文件/锁
+                proc.Kill(true);
                 try
                 {
                     // 等待进程退出，加 5 秒超时防止无限挂起
@@ -116,11 +138,21 @@ public class ProcessService
     public async Task<ProcessResult> RunWithProgressAsync(
         string fileName, string arguments, Action<string> onLine,
         string? workingDir = null, int timeoutMs = 30000)
+        => await RunWithProgressCoreAsync(fileName, arguments, null, onLine, workingDir, timeoutMs);
+
+    /// <summary>使用 ArgumentList 的进度版本（防参数注入）。</summary>
+    public async Task<ProcessResult> RunWithProgressAsync(
+        string fileName, IReadOnlyList<string> argumentList, Action<string> onLine,
+        string? workingDir = null, int timeoutMs = 30000)
+        => await RunWithProgressCoreAsync(fileName, null, argumentList, onLine, workingDir, timeoutMs);
+
+    private async Task<ProcessResult> RunWithProgressCoreAsync(
+        string fileName, string? arguments, IReadOnlyList<string>? argumentList,
+        Action<string> onLine, string? workingDir, int timeoutMs)
     {
         var psi = new ProcessStartInfo
         {
             FileName = fileName,
-            Arguments = arguments,
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -128,6 +160,15 @@ public class ProcessService
             StandardOutputEncoding = Encoding.UTF8,
             StandardErrorEncoding = Encoding.UTF8
         };
+        if (argumentList is not null)
+        {
+            foreach (var arg in argumentList)
+                psi.ArgumentList.Add(arg);
+        }
+        else
+        {
+            psi.Arguments = arguments ?? string.Empty;
+        }
         if (!string.IsNullOrWhiteSpace(workingDir))
         {
             psi.WorkingDirectory = workingDir;
@@ -172,7 +213,7 @@ public class ProcessService
             }
             catch (OperationCanceledException)
             {
-                proc.Kill();
+                proc.Kill(true);
                 try
                 {
                     using var killCts = new CancellationTokenSource(5000);

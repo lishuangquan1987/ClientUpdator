@@ -25,7 +25,8 @@ type Client struct {
 // NewClient 创建客户端
 func NewClient(serverURL string) *Client {
 	return &Client{
-		ServerURL: serverURL,
+		// 去掉末尾 "/"，避免拼出 "http://host//api/..." 双斜杠路径
+		ServerURL: strings.TrimRight(serverURL, "/"),
 		hc:        &http.Client{Timeout: 500 * time.Second},
 	}
 }

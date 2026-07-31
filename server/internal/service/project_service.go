@@ -199,11 +199,14 @@ func PublishVersion(ctx context.Context, projectName string, version string, log
 }
 
 func DeleteProject(ctx context.Context, projectName string) models.CommonResponse {
-	_, err := db.Client.Project.Update().Where(project.NameEQ(projectName)).
+	affected, err := db.Client.Project.Update().Where(project.NameEQ(projectName), project.IsDeletedEQ(false)).
 		SetIsDeleted(true).
 		Save(ctx)
 	if err != nil {
 		return models.NGWithError(err)
+	}
+	if affected == 0 {
+		return models.NG(fmt.Sprintf("项目不存在: %s", projectName))
 	}
 	return models.OK()
 }

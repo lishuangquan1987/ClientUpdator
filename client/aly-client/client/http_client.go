@@ -189,16 +189,28 @@ func DownloadFile(serverURL string, serverFilePath string, localPath string) err
 		return fmt.Errorf("创建目录失败: %v", err)
 	}
 
-	f, err := os.Create(localPath)
+	// 原子写：先写 .part 再 rename，失败时删除临时文件。
+	// 旧实现直接 os.Create(localPath)，中断会留下半截文件并被后续流程激活。
+	partPath := localPath + ".part"
+	f, err := os.Create(partPath)
 	if err != nil {
 		return fmt.Errorf("创建文件失败: %v", err)
 	}
-	defer f.Close()
 
 	_, err = io.Copy(f, resp.Body)
+	closeErr := f.Close()
 	if err != nil {
-		os.Remove(localPath)
+		os.Remove(partPath)
 		return fmt.Errorf("写入文件失败: %v", err)
+	}
+	// Close 错误（如磁盘满 flush 失败）也会丢数据，不能吞掉
+	if closeErr != nil {
+		os.Remove(partPath)
+		return fmt.Errorf("关闭文件失败: %v", closeErr)
+	}
+	if err := os.Rename(partPath, localPath); err != nil {
+		os.Remove(partPath)
+		return fmt.Errorf("原子替换文件失败: %v", err)
 	}
 
 	return nil
@@ -300,11 +312,27 @@ func DownloadFileWithResume(serverURL string, serverFilePath string, localPath s
 
 	_, copyErr := io.Copy(f, resp.Body)
 	resp.Body.Close()
-	f.Close()
+	closeErr := f.Close()
 
 	if copyErr != nil {
 		os.Remove(partPath)
 		return fmt.Errorf("write file failed: %v", copyErr)
+	}
+	if closeErr != nil {
+		os.Remove(partPath)
+		return fmt.Errorf("close file failed: %v", closeErr)
+	}
+
+	// 校验下载完整性：与预期大小不一致说明传输不完整，删除并报错
+	if serverFileSize > 0 {
+		finfo, statErr := os.Stat(partPath)
+		if statErr != nil || finfo.Size() != serverFileSize {
+			os.Remove(partPath)
+			if statErr != nil {
+				return fmt.Errorf("verify part file failed: %v", statErr)
+			}
+			return fmt.Errorf("download incomplete: got %d bytes, expected %d", finfo.Size(), serverFileSize)
+		}
 	}
 
 	if err := os.Rename(partPath, localPath); err != nil {

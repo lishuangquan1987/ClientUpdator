@@ -63,23 +63,39 @@ func CopyFile(src, dst string, overwrite bool) error {
 		return fmt.Errorf("创建目标目录失败 %s: %v", dstDir, err)
 	}
 
-	dstFile, err := os.Create(dst)
+	// 原子写：先写临时文件再 rename，失败/中断不会留下半截目标文件
+	dstTmp := dst + ".tmp"
+	dstFile, err := os.Create(dstTmp)
 	if err != nil {
 		return fmt.Errorf("创建目标文件失败 %s: %v", dst, err)
 	}
-	defer dstFile.Close()
 
 	if _, err := io.Copy(dstFile, srcFile); err != nil {
+		dstFile.Close()
+		os.Remove(dstTmp)
 		return fmt.Errorf("复制文件内容失败: %v", err)
 	}
 
 	srcInfo, statErr := srcFile.Stat()
 	if statErr != nil {
+		dstFile.Close()
+		os.Remove(dstTmp)
 		return fmt.Errorf("获取源文件信息失败 %s: %v", src, statErr)
 	}
 	// Chmod is not supported on Windows; ignore on unsupported platforms
 	if chmodErr := dstFile.Chmod(srcInfo.Mode()); chmodErr != nil && runtime.GOOS != "windows" {
+		dstFile.Close()
+		os.Remove(dstTmp)
 		return fmt.Errorf("chmod failed %s: %v", dst, chmodErr)
+	}
+	closeErr := dstFile.Close()
+	if closeErr != nil {
+		os.Remove(dstTmp)
+		return fmt.Errorf("关闭目标文件失败 %s: %v", dst, closeErr)
+	}
+	if err := os.Rename(dstTmp, dst); err != nil {
+		os.Remove(dstTmp)
+		return fmt.Errorf("原子替换目标文件失败 %s: %v", dst, err)
 	}
 
 	return nil

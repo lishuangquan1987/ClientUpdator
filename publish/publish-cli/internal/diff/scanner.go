@@ -261,12 +261,23 @@ func matchFile(relPath, pattern string) bool {
 		return true
 	}
 	// 尝试标准 glob 匹配（支持 *, ?, [abc]）
-	if matched, _ := filepath.Match(pattern, relPath); matched {
+	matched, matchErr := filepath.Match(pattern, relPath)
+	if matchErr != nil {
+		// 非法 glob 模式（如未闭合的 "["）：提示而非静默当作不匹配
+		fmt.Fprintf(os.Stderr, "warning: invalid ignore pattern %q: %v\n", pattern, matchErr)
+		return false
+	}
+	if matched {
 		return true
 	}
 	// 用文件名尝试 glob 匹配（方便只写文件名的情况）
 	base := filepath.Base(relPath)
-	if matched, _ := filepath.Match(pattern, base); matched {
+	matched, matchErr = filepath.Match(pattern, base)
+	if matchErr != nil {
+		fmt.Fprintf(os.Stderr, "warning: invalid ignore pattern %q: %v\n", pattern, matchErr)
+		return false
+	}
+	if matched {
 		return true
 	}
 	// 如果 pattern 以 * 开头，匹配后缀（兼容旧行为）

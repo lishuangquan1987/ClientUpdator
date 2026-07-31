@@ -50,7 +50,16 @@ func Save(projectPath string, files []StagedFile) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, data, 0644)
+	// 原子写：先写临时文件再 rename，避免崩溃留下半截 staged-files.json
+	tmpPath := path + ".tmp"
+	if err := os.WriteFile(tmpPath, data, 0644); err != nil {
+		return err
+	}
+	if err := os.Rename(tmpPath, path); err != nil {
+		os.Remove(tmpPath)
+		return err
+	}
+	return nil
 }
 
 // Add adds files to the staging area with default status "modified".

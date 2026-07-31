@@ -106,7 +106,7 @@ public class ConfigService
         {
             Directory.CreateDirectory(ConfigDir);
             var json = JsonConvert.SerializeObject(projects, Formatting.Indented);
-            File.WriteAllText(ConfigFile, json);
+            WriteAllTextAtomic(ConfigFile, json);
             Log.Information("保存配置成功: {Count} 个项目 -> {Path}", projects.Count, ConfigFile);
             return true;
         }
@@ -177,13 +177,24 @@ public class ConfigService
         try
         {
             var json = JsonConvert.SerializeObject(config, Formatting.Indented);
-            File.WriteAllText(clientJsonPath, json);
+            WriteAllTextAtomic(clientJsonPath, json);
             Log.Information("写入 client.json: {Path}", clientJsonPath);
         }
         catch (Exception ex)
         {
             Log.Error(ex, "写入 client.json 失败: {Path}", clientJsonPath);
         }
+    }
+
+    /// <summary>
+    /// 原子写文件：先写 .tmp 再替换目标，崩溃/断电不会留下半截 JSON。
+    /// 旧实现 File.WriteAllText 直接截断目标，写入中途进程退出会损坏配置。
+    /// </summary>
+    private static void WriteAllTextAtomic(string path, string content)
+    {
+        string tmpPath = path + ".tmp";
+        File.WriteAllText(tmpPath, content);
+        File.Replace(tmpPath, path, null);
     }
 
     /// <summary>查找 aly-client.exe 源文件</summary>

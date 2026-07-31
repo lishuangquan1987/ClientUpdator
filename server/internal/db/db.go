@@ -75,9 +75,17 @@ func InitDB() {
 	if err != nil {
 		log.Fatalf("failed opening connection to sqlite: %v", err)
 	}
-	// SQLite 单写入者限制：防止并发写入导致 "database is locked"
-	// SetMaxOpenConns(1) 是 SQLite 的合理限制，确保同一时间只有一个写连接
+	// SQLite 单写入者限制：防止并发写入导致 "database is locked"。
+	// WAL 模式下读不阻塞写，配合 busy_timeout 减少锁冲突；SetMaxOpenConns(1)
+	// 仍确保同一时间只有一个连接，避免多连接下 SQLite 锁升级。
 	db.SetMaxOpenConns(1)
+	// WAL + 忙碌等待：并发读写更稳（WAL 允许读与写并发，崩溃可恢复）
+	if _, err := db.Exec("PRAGMA journal_mode=WAL"); err != nil {
+		log.Printf("failed enabling WAL mode (non-fatal): %v", err)
+	}
+	if _, err := db.Exec("PRAGMA busy_timeout=5000"); err != nil {
+		log.Printf("failed setting busy_timeout (non-fatal): %v", err)
+	}
 	// Enable foreign keys (required by modernc.org/sqlite)
 	_, err = db.Exec("PRAGMA foreign_keys = ON")
 	if err != nil {

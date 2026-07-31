@@ -183,7 +183,9 @@ func closeProcessesGracefully(names []string, timeout time.Duration) {
 			util.SendCloseMessageToProcess(pid)
 		}
 	}
-	util.KillProcessesAndWait(names, timeout)
+	if err := util.KillProcessesAndWait(names, timeout); err != nil {
+		util.AppendToLog(".", "update.log", fmt.Sprintf("closeProcessesGracefully: kill failed: %v", err))
+	}
 }
 
 // launchMainExe 启动主程序
