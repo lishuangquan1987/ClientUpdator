@@ -38,9 +38,9 @@ jobs:
         if: failure()
         shell: cmd
         run: |
-          echo "setup-go could not resolve Go version from go.mod, using latest..."
-          powershell -Command "& {$(Invoke-WebRequest -Uri 'https://go.dev/dl/go1.23.0.windows-amd64.zip' -OutFile 'C:\go.zip'); Expand-Archive -Path 'C:\go.zip' -DestinationPath 'C:\go' -Force}"
-          echo "C:\go\bin" >> %GITHUB_PATH%
+          echo "setup-go could not resolve Go version from go.mod, using go1.25.0..."
+          powershell -Command "& {$(Invoke-WebRequest -Uri 'https://go.dev/dl/go1.25.0.windows-amd64.zip' -OutFile 'C:\go.zip'); Expand-Archive -Path 'C:\go.zip' -DestinationPath 'C:\go' -Force}"
+          echo C:\go\go\bin>> %GITHUB_PATH%
 
       - name: Verify Go version
         run: go version
@@ -91,9 +91,9 @@ jobs:
         if: failure()
         shell: cmd
         run: |
-          echo "setup-go could not resolve Go version from go.mod, using latest..."
-          powershell -Command "& {$(Invoke-WebRequest -Uri 'https://go.dev/dl/go1.23.0.windows-amd64.zip' -OutFile 'C:\go.zip'); Expand-Archive -Path 'C:\go.zip' -DestinationPath 'C:\go' -Force}"
-          echo "C:\go\bin" >> %GITHUB_PATH%
+          echo "setup-go could not resolve Go version from go.mod, using go1.25.0..."
+          powershell -Command "& {$(Invoke-WebRequest -Uri 'https://go.dev/dl/go1.25.0.windows-amd64.zip' -OutFile 'C:\go.zip'); Expand-Archive -Path 'C:\go.zip' -DestinationPath 'C:\go' -Force}"
+          echo C:\go\go\bin>> %GITHUB_PATH%
 
       - name: Verify Go version
         run: go version
@@ -141,7 +141,8 @@ jobs:
           echo "setup-go could not find Go 1.10, downloading manually..."
           curl -fsSL -o go1.10.8.windows-amd64.zip https://go.dev/dl/go1.10.8.windows-amd64.zip
           powershell -Command "Expand-Archive -Path go1.10.8.windows-amd64.zip -DestinationPath C:\go110"
-          echo "C:\go110\bin" >> %GITHUB_PATH%
+          echo C:\go110\go\bin>> %GITHUB_PATH%
+          echo GOROOT=C:\go110\go>> %GITHUB_ENV%
           if "%GOPATH%"=="" setx GOPATH C:\Users\runneradmin\go
 
       - name: Verify Go version
@@ -195,14 +196,7 @@ jobs:
         shell: bash
         run: |
           TARGETS="client/aly-client-sdk/AlyClient.CSharpSDK/AlyClient.CSharpSDK/AlyClient.CSharpSDK.targets"
-          python -c "
-with open('$TARGETS', 'r', encoding='utf-8') as f:
-    content = f.read()
-content = content.replace('ALY_CLIENT_VERSION_PLACEHOLDER', '$ALY_VERSION')
-with open('$TARGETS', 'w', encoding='utf-8') as f:
-    f.write(content)
-print(f'Injected version $ALY_VERSION into .targets')
-"
+          python -c "p='$TARGETS';f=open(p,'r',encoding='utf-8');c=f.read();f.close();open(p,'w',encoding='utf-8').write(c.replace('ALY_CLIENT_VERSION_PLACEHOLDER','$ALY_VERSION'));print('Injected version $ALY_VERSION into .targets')"
 
       - name: Build & Pack SDK
         shell: cmd
