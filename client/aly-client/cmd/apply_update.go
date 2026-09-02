@@ -115,17 +115,70 @@ func ApplyUpdate() {
 		return
 	}
 
-	// Close processes gracefully
-	if len(fc.ExeCfg.MustCloseProcessName) > 0 {
-		closeProcessesGracefully(fc.ExeCfg.MustCloseProcessName, time.Duration(*closeTimeoutFlag)*time.Second)
-	}
-
-	// Atomic replacement
 	versionDir, err := fc.ExeCfg.AppVersionDir(versionInfo.Version)
 	if err != nil {
 		printOutput(false, err.Error(), nil)
 		return
 	}
+
+	// 原子替换 + 重试：替换失败多因进程占用文件夹，每次重试前都会重新关闭占用进程。
+	const maxAttempts = 3
+	const retryInterval = 2 * time.Second
+	closeTimeout := time.Duration(*closeTimeoutFlag) * time.Second
+
+	var applyErr error
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		applyErr = applyReplacement(fc, versionInfo, versionDir, closeTimeout)
+		if applyErr == nil {
+			break
+		}
+		util.AppendToLog(logDir(), "update.log",
+			fmt.Sprintf("apply attempt %d/%d failed: %v", attempt, maxAttempts, applyErr))
+		if attempt < maxAttempts {
+			// 回滚失败可能已导致 ApplicationFolder 丢失，此时重试只会从不存在源复制、无法恢复
+			if _, statErr := os.Stat(fc.MainFolder); os.IsNotExist(statErr) {
+				break
+			}
+			time.Sleep(retryInterval)
+		}
+	}
+	if applyErr != nil {
+		versionInfo.VersionStatus = config.VersionStatusDownloaded
+		if wErr := config.WriteVersion(versionInfo); wErr != nil {
+			util.AppendToLog(logDir(), "update.log", fmt.Sprintf("rollback after apply fail: write version failed: %v", wErr))
+		}
+		printOutput(false, applyErr.Error(), nil)
+		return
+	}
+
+	// Update version.json
+	versionInfo.VersionStatus = config.VersionStatusApplied
+	if err := config.WriteVersion(versionInfo); err != nil {
+		printOutput(false, fmt.Sprintf("write version: %v", err), nil)
+		return
+	}
+
+	// Run post-update script if configured
+	if versionInfo.AfterApplyUpdateScript != "" {
+		runScript(filepath.Join(fc.MainFolder, versionInfo.AfterApplyUpdateScript))
+	}
+
+	// Launch main exe
+	launchMainExe(fc.ExeCfg)
+
+	// Output success
+	printOutput(true, "", nil)
+}
+
+// applyReplacement 执行一次原子替换：关闭占用进程 → 复制 → 备份改名 → 替换改名。
+// 任何一步失败都会尝试回滚恢复 mainFolder，并返回错误（由调用方决定是否重试）。
+func applyReplacement(fc *FullConfig, versionInfo *config.VersionInfo, versionDir string, closeTimeout time.Duration) error {
+	// 关闭 must_close_process_name 指定的进程
+	if len(fc.ExeCfg.MustCloseProcessName) > 0 {
+		closeProcessesGracefully(fc.ExeCfg.MustCloseProcessName, closeTimeout)
+	}
+	// 自动探测并结束占用 ApplicationFolder 的进程（排除更新器自身）
+	closeProcessesHoldingFolder(fc.MainFolder, closeTimeout)
 
 	// 从 versionDir 读取 shared.json，获取 un_copy_folders / un_copy_files
 	// 这些字段指定不应从当前 ApplicationFolder 复制到新版本目录的文件/文件夹
@@ -146,23 +199,13 @@ func ApplyUpdate() {
 		return config.ShouldSkipFolder(relPath, unCopyFolders)
 	}
 	if err := util.CopyDirWithExclude(fc.MainFolder, versionDir, shouldSkipFile, shouldSkipFolder); err != nil {
-		versionInfo.VersionStatus = config.VersionStatusDownloaded
-		if wErr := config.WriteVersion(versionInfo); wErr != nil {
-			util.AppendToLog(logDir(), "update.log", fmt.Sprintf("rollback after copy fail: write version failed: %v", wErr))
-		}
-		printOutput(false, fmt.Sprintf("copy to version dir: %v", err), nil)
-		return
+		return fmt.Errorf("copy to version dir: %v", err)
 	}
 
 	// Compute paths for atomic rename
 	prevVersionDir, err := fc.ExeCfg.AppVersionDir(versionInfo.VersionPrevious)
 	if err != nil {
-		versionInfo.VersionStatus = config.VersionStatusDownloaded
-		if wErr := config.WriteVersion(versionInfo); wErr != nil {
-			util.AppendToLog(logDir(), "update.log", fmt.Sprintf("rollback after prevVersionDir err: write version failed: %v", wErr))
-		}
-		printOutput(false, err.Error(), nil)
-		return
+		return err
 	}
 	// Temporarily move old backup aside instead of deleting upfront (safer for power failure)
 	oldBackupTemp := prevVersionDir + ".old"
@@ -187,12 +230,7 @@ func ApplyUpdate() {
 				util.AppendToLog(exeDir, "update.log", fmt.Sprintf("rollback restore backup: %v", rerr))
 			}
 		}
-		versionInfo.VersionStatus = config.VersionStatusDownloaded
-		if wErr := config.WriteVersion(versionInfo); wErr != nil {
-			util.AppendToLog(logDir(), "update.log", fmt.Sprintf("rollback after backup rename fail: write version failed: %v", wErr))
-		}
-		printOutput(false, fmt.Sprintf("backup rename failed: %v", err), nil)
-		return
+		return fmt.Errorf("backup rename failed: %v", err)
 	}
 
 	// Rename versionDir -> mainFolder
@@ -206,12 +244,7 @@ func ApplyUpdate() {
 			exeDir := logDir()
 			util.AppendToLog(exeDir, "update.log", fmt.Sprintf("rollback backup restore: %v", rerr))
 		}
-		versionInfo.VersionStatus = config.VersionStatusDownloaded
-		if wErr := config.WriteVersion(versionInfo); wErr != nil {
-			util.AppendToLog(logDir(), "update.log", fmt.Sprintf("rollback after apply rename fail: write version failed: %v", wErr))
-		}
-		printOutput(false, fmt.Sprintf("apply rename failed: %v", err), nil)
-		return
+		return fmt.Errorf("apply rename failed: %v", err)
 	}
 
 	// Clean up old backup AFTER successful rename
@@ -219,22 +252,5 @@ func ApplyUpdate() {
 		exeDir := logDir()
 		util.AppendToLog(exeDir, "update.log", fmt.Sprintf("cleanup old backup: %v", err))
 	}
-
-	// Update version.json
-	versionInfo.VersionStatus = config.VersionStatusApplied
-	if err := config.WriteVersion(versionInfo); err != nil {
-		printOutput(false, fmt.Sprintf("write version: %v", err), nil)
-		return
-	}
-
-	// Run post-update script if configured
-	if versionInfo.AfterApplyUpdateScript != "" {
-		runScript(filepath.Join(fc.MainFolder, versionInfo.AfterApplyUpdateScript))
-	}
-
-	// Launch main exe
-	launchMainExe(fc.ExeCfg)
-
-	// Output success
-	printOutput(true, "", nil)
+	return nil
 }

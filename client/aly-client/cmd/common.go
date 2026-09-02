@@ -188,6 +188,35 @@ func closeProcessesGracefully(names []string, timeout time.Duration) {
 	}
 }
 
+// closeProcessesHoldingFolder 探测并结束占用指定文件夹的进程（排除更新器自身），
+// 先发 WM_CLOSE 优雅关闭，超时后强杀。覆盖 must_close_process_name 之外的占用者
+// （例如用户手动打开的 explorer 文件夹窗口）。
+func closeProcessesHoldingFolder(folder string, timeout time.Duration) {
+	selfPid := uint32(os.Getpid())
+	pids, err := util.FindProcessesHoldingPath(folder)
+	if err != nil {
+		util.AppendToLog(logDir(), "update.log",
+			fmt.Sprintf("closeProcessesHoldingFolder: find processes holding %s failed: %v", folder, err))
+		return
+	}
+	var toKill []uint32
+	for _, pid := range pids {
+		if pid != selfPid {
+			toKill = append(toKill, pid)
+		}
+	}
+	if len(toKill) == 0 {
+		return
+	}
+	for _, pid := range toKill {
+		util.SendCloseMessageToProcess(pid)
+	}
+	if err := util.KillPIDsAndWait(toKill, timeout); err != nil {
+		util.AppendToLog(logDir(), "update.log",
+			fmt.Sprintf("closeProcessesHoldingFolder: kill processes holding %s failed: %v", folder, err))
+	}
+}
+
 // launchMainExe 启动主程序
 func launchMainExe(cfg *config.Config) {
 	exeDir, err := config.ExeDir()

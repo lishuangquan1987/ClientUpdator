@@ -28,6 +28,11 @@ func KillProcessesAndWait(names []string, timeout time.Duration) error {
 	return nil
 }
 
+// KillPIDsAndWait 等待指定 PID 列表的进程退出，超时后强杀（Unix 兼容实现）
+func KillPIDsAndWait(pids []uint32, timeout time.Duration) error {
+	return nil
+}
+
 // SendCloseMessageToProcess 向指定 PID 的所有可见顶层窗口发送 WM_CLOSE 消息（Unix 无窗口系统兼容）
 func SendCloseMessageToProcess(pid uint32) {
 	// Unix 系统无窗口消息机制，跳过

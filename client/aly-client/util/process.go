@@ -160,7 +160,12 @@ func KillProcessesAndWait(names []string, timeout time.Duration) error {
 		allPIDs = append(allPIDs, pids...)
 	}
 
-	if len(allPIDs) == 0 {
+	return KillPIDsAndWait(allPIDs, timeout)
+}
+
+// KillPIDsAndWait 等待指定 PID 列表的进程退出，超时后强杀
+func KillPIDsAndWait(pids []uint32, timeout time.Duration) error {
+	if len(pids) == 0 {
 		return nil
 	}
 
@@ -170,7 +175,7 @@ func KillProcessesAndWait(names []string, timeout time.Duration) error {
 
 	for time.Now().Before(deadline) {
 		allDead := true
-		for _, pid := range allPIDs {
+		for _, pid := range pids {
 			if dead[pid] {
 				continue
 			}
@@ -186,7 +191,7 @@ func KillProcessesAndWait(names []string, timeout time.Duration) error {
 	}
 
 	// 超时后强制终止残留进程
-	for _, pid := range allPIDs {
+	for _, pid := range pids {
 		if !dead[pid] {
 			if err := KillProcess(pid); err != nil {
 				fmt.Fprintf(os.Stderr, "KillProcess %d failed: %v\n", pid, err)
@@ -195,7 +200,7 @@ func KillProcessesAndWait(names []string, timeout time.Duration) error {
 	}
 
 	// 再次等待残留进程退出（给 TerminateProcess 生效时间）
-	for _, pid := range allPIDs {
+	for _, pid := range pids {
 		if !dead[pid] {
 			WaitForProcessExit(pid, 2*time.Second)
 		}
